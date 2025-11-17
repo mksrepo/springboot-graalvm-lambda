@@ -1,25 +1,39 @@
-# Stage 1 — Build Spring Boot jar + native image
+# ------------------------------------------------------------
+# 1. Build native binary using GraalVM CE + Maven
+# ------------------------------------------------------------
 FROM ghcr.io/graalvm/native-image-community:21 AS build
+
 WORKDIR /workspace
 
-# Copy project files
-COPY pom.xml mvnw* ./
+# Copy Maven wrapper and config
+COPY pom.xml mvnw ./
 COPY .mvn .mvn
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -q dependency:go-offline
 
+# Pre-fetch dependencies
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -q dependency:go-offline
+
+# Copy sources
 COPY src src
 
-# Build Spring Boot JAR + Native Image
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -Pnative -DskipTests native:compile
+# Build the native image
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -Pnative -DskipTests native:compile
 
-# Stage 2 — Minimal Lambda runtime
-FROM public.ecr.aws/amazonlinux/amazonlinux:2
+
+# ------------------------------------------------------------
+# 2. Create AWS Lambda deployable image (Amazon Linux 2)
+# ------------------------------------------------------------
+FROM public.ecr.aws/lambda/provided:al2 AS final
 
 WORKDIR /var/task
 
-# Copy native binary (rename to bootstrap)
+# Copy generated native binary.
+# Adjust path if needed: target/native/linux-x86_64/myapp
 COPY --from=build /workspace/target/* /var/task/bootstrap
 
-RUN chmod +x /var/task/bootstrapcd ..
+# Make executable
+RUN chmod +x /var/task/bootstrap
 
+# Lambda entrypoint
 ENTRYPOINT ["/var/task/bootstrap"]

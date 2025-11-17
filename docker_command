@@ -1,9 +1,11 @@
-# build the container locally
-docker build \
-  --platform=linux/arm64 \
-  -f Dockerfile.native \
-  -t springboot-graalvm-lambda:latest .
-# run locally (port mapping if app listens on a port)
-docker run -p 8080:8080 my-spring-native:latest
-# test
-curl http://localhost:8080/hello
+docker build -t my-native-app:latest .
+
+docker create --name temp my-native-app:latest
+
+docker cp temp:/var/task/bootstrap ./bootstrap
+
+file springboot-graalvm-lambda
+
+chmod +x bootstrap
+
+zip lambda.zip bootstrap
