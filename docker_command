@@ -1,6 +1,6 @@
-docker build -t my-native-app:latest .
+docker build -t springboot-graalvm-lambda:latest .
 
-docker create --name temp my-native-app:latest
+docker create --name temp springboot-graalvm-lambda:latest
 
 docker cp temp:/var/task/bootstrap ./bootstrap
 
@@ -9,3 +9,10 @@ file springboot-graalvm-lambda
 chmod +x bootstrap
 
 zip lambda.zip bootstrap
+
+chmod +x deploy-lambda-from-ecr.sh
+./deploy-lambda-from-ecr.sh
+
+aws iam attach-role-policy \
+  --role-name lambda-basic-execution \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
