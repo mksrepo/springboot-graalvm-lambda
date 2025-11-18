@@ -32,7 +32,12 @@ echo "✔️ Dockerfile uses correct GraalVM version (22.x)."
 ### 1️⃣ Build Docker image
 ### ============================
 echo "🔧 Building Docker image using Amazon Linux compatible GraalVM..."
-if ! docker build --platform linux/amd64 -t ${REPO_NAME}:${IMAGE_TAG} .; then
+if ! docker build \
+  --platform linux/amd64 \
+  --provenance=false \
+  --sbom=false \
+  -t "${REPO_NAME}:${IMAGE_TAG}" \
+  .; then
     echo "❌ Docker build failed!"
     echo "This usually happens if:"
     echo " - Wrong GraalVM version is used"
