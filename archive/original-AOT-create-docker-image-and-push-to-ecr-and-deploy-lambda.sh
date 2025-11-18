@@ -11,7 +11,7 @@ LAMBDA_ROLE="lambda-execution-role"
 
 ### 1️⃣ Build Docker Image ###
 echo "🔧 Building Docker image..."
-docker build --platform linux/amd64 -t ${REPO_NAME}:${IMAGE_TAG} .
+docker build -t ${REPO_NAME}:${IMAGE_TAG} .
 
 ### 2️⃣ Create ECR Repo If Not Exists ###
 echo "📦 Checking ECR repo..."
@@ -62,3 +62,21 @@ if ! aws iam get-role --role-name "${LAMBDA_ROLE}" >/dev/null 2>&1; then
 else
   echo "✔️ Lambda execution role exists: ${LAMBDA_ROLE}"
 fi
+
+### 6️⃣ Deploy Lambda Function ###
+echo "🚀 Deploying Lambda function: ${LAMBDA_FUNCTION}"
+if ! aws lambda get-function --function-name "${LAMBDA_FUNCTION}" >/dev/null 2>&1; then
+  echo "📌 Lambda does NOT exist — creating function..."
+  aws lambda create-function \
+    --function-name "${LAMBDA_FUNCTION}" \
+    --package-type Image \
+    --code ImageUri="${FULL_URI}" \
+    --role "arn:aws:iam::${AWS_ACCOUNT_ID}:role/${LAMBDA_ROLE}"
+else
+  echo "📌 Lambda exists — updating image..."
+  aws lambda update-function-code \
+    --function-name "${LAMBDA_FUNCTION}" \
+    --image-uri "${FULL_URI}"
+fi
+
+echo "🎉 Deployment completed successfully!"

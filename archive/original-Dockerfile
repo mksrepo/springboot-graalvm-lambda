@@ -1,0 +1,28 @@
+# 1️⃣ Build native binary using GraalVM
+FROM ghcr.io/graalvm/native-image-community:Dockerfile AS build
+
+WORKDIR /workspace
+
+# Copy Maven wrapper and config
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+
+# Download dependencies
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -q dependency:go-offline
+
+# Copy source
+COPY src src
+
+# Build native image
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -Pnative -DskipTests native:compile -Dnative-image.docker-build=true
+
+# 2️⃣ Lambda runtime
+FROM public.ecr.aws/lambda/provided:al2 AS final
+
+WORKDIR /var/task
+
+# Copy the exact native binary
+COPY --from=build /workspace/target/springboot-graalvm-lambda /var/task/bootstrap
+RUN chmod +x /var/task/bootstrap
+
+ENTRYPOINT ["/var/task/bootstrap"]
