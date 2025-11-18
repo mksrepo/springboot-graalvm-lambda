@@ -16,10 +16,31 @@ AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 FULL_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${IMAGE_TAG}"
 
 ### ============================
+### CHECK DOCKERFILE FOR COMPATIBLE GRAALVM
+### ============================
+if grep -q "native-image-community:25" Dockerfile || grep -q "native-image-community:24" Dockerfile; then
+  echo "❌ ERROR: Your Dockerfile is using GraalVM 24 or 25."
+  echo "❌ These versions require GLIBC >= 2.32 which Amazon Linux 2 DOES NOT support."
+  echo "✅ FIX: Update Dockerfile base image to:"
+  echo "   → ghcr.io/graalvm/native-image-community:22.3.3-ol9"
+  exit 1
+fi
+
+echo "✔️ Dockerfile uses correct GraalVM version (22.x)."
+
+### ============================
 ### 1️⃣ Build Docker image
 ### ============================
-echo "🔧 Building Docker image..."
-docker build --platform linux/amd64 -t ${REPO_NAME}:${IMAGE_TAG} .
+echo "🔧 Building Docker image using Amazon Linux compatible GraalVM..."
+if ! docker build --platform linux/amd64 -t ${REPO_NAME}:${IMAGE_TAG} .; then
+    echo "❌ Docker build failed!"
+    echo "This usually happens if:"
+    echo " - Wrong GraalVM version is used"
+    echo " - Native image failed due to missing libraries"
+    exit 1
+fi
+
+echo "✔️ Docker build complete."
 
 ### ============================
 ### 2️⃣ Create ECR repo if not exists
