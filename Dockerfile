@@ -1,5 +1,5 @@
 # 1. Build native binary using a valid GraalVM community image
-FROM ghcr.io/graalvm/native-image-community:21 AS build
+FROM ghcr.io/graalvm/native-image-community:17-ol7 AS build
 
 WORKDIR /workspace
 
@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -Pnative -DskipTests native:compile -Dnative-image.docker-build=true
 
 # 2. Lambda runtime
-FROM public.ecr.aws/lambda/provided:al2023 AS final
+FROM public.ecr.aws/lambda/provided:al2 AS final
 
 WORKDIR /var/task
 
