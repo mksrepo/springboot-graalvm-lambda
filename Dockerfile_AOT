@@ -1,25 +1,40 @@
-# 1. Build native binary using a valid GraalVM community image
-FROM ghcr.io/graalvm/native-image-community:17-ol7 AS build
+# =========================================================
+# 1. Build Spring Boot Native Image using latest GraalVM 25
+# =========================================================
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 
 WORKDIR /workspace
 
+# Copy minimal files first for better caching
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
 
+# Warm up Maven dependencies
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -q dependency:go-offline
 
+# Copy application source
 COPY src src
 
+# Build Spring Boot Native binary
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw -Pnative -DskipTests native:compile -Dnative-image.docker-build=true
+    ./mvnw -Pnative -DskipTests native:compile
 
-# 2. Lambda runtime
-FROM public.ecr.aws/lambda/provided:al2 AS final
 
-WORKDIR /var/task
+# =========================================================
+# 2. Minimal runtime for running the native binary locally
+# =========================================================
+FROM debian:bookworm-slim AS final
+# (or ubuntu:24.04, or alpine:latest IF your binary is musl-based)
 
-COPY --from=build /workspace/target/springboot-graalvm-lambda /var/task/bootstrap
-RUN chmod +x /var/task/bootstrap
+WORKDIR /app
 
-ENTRYPOINT ["/var/task/bootstrap"]
+# Copy native binary from build
+COPY --from=build /workspace/target/springboot-graalvm-lambda /app/app
+
+RUN chmod +x /app/app
+
+# Expose port (if web app)
+EXPOSE 8080
+
+ENTRYPOINT ["/app/app"]
