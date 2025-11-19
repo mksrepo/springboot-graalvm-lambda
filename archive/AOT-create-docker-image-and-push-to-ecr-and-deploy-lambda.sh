@@ -18,7 +18,7 @@ FULL_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${I
 ### ============================
 ### CHECK DOCKERFILE FOR COMPATIBLE GRAALVM
 ### ============================
-if grep -q "native-image-community:25" Dockerfile || grep -q "native-image-community:24" Dockerfile; then
+if grep -q "native-image-community:25" Dockerfile.AOT || grep -q "native-image-community:24" Dockerfile.AOT; then
   echo "❌ ERROR: Your Dockerfile is using GraalVM 24 or 25."
   echo "❌ These versions require GLIBC >= 2.32 which Amazon Linux 2 DOES NOT support."
   echo "✅ FIX: Update Dockerfile base image to:"
