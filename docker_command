@@ -16,3 +16,6 @@ chmod +x deploy-lambda-from-ecr.sh
 aws iam attach-role-policy \
   --role-name lambda-basic-execution \
   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+
+
