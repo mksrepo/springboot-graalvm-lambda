@@ -1,13 +1,54 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Building GraalVM Native Docker image..."
+### ============================
+### CONFIGURATION
+### ============================
+DOCKERHUB_USER="mrinmay939"
+REPO="springboot-graalvm-aot"
+TAG="v1.0"
+IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
-docker build \
-  -f Dockerfile_AOT \
-  -t springboot-graalvm-aot:latest \
-  .
+K8S_DIR="./k8s"
+DOCKER_DIR="./docker"
 
-echo "✔️ Build complete!"
-echo "Run with:"
-echo "docker run -p 8080:8080 springboot-graalvm-aot:latest"
+### ============================
+echo "🚀 Step 1: Build Docker Image"
+### ============================
+
+docker build -f ${DOCKER_DIR}/Dockerfile_AOT -t ${IMAGE} .
+
+echo "✔️ Build complete: ${IMAGE}"
+
+
+### ============================
+echo "🔐 Step 2: Docker Hub Login"
+### ============================
+docker login
+
+
+### ============================
+echo "📤 Step 3: Push to Docker Hub"
+### ============================
+docker push ${IMAGE}
+
+echo "✔️ Image pushed successfully!"
+
+
+### ============================
+echo "📥 Step 4: Deploy to Kubernetes"
+### ============================
+# Update the deployment file with the correct image tag
+sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment.yaml
+
+kubectl apply -f ${K8S_DIR}/deployment.yaml
+kubectl apply -f ${K8S_DIR}/service.yaml
+
+echo "⏳ Waiting for pods..."
+sleep 4
+
+kubectl get pods
+kubectl get svc
+
+echo "🎉 Deployment complete!"
+echo "🌍 Access your app at: https://localhost:30080/"
