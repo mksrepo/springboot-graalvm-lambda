@@ -6,7 +6,7 @@ set -e
 ### ============================
 DOCKERHUB_USER="mrinmay939"
 REPO="springboot-graalvm-jit"
-TAG="v1.0"
+TAG="v2.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
 K8S_DIR="./k8s"

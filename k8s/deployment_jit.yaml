@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: app
-          image: mrinmay939/springboot-graalvm-jit:v1.0
+          image: mrinmay939/springboot-graalvm-jit:v2.0
           ports:
             - containerPort: 8080
