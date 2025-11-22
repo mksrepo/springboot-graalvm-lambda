@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-graalvm-aot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springboot-graalvm-aot
+  template:
+    metadata:
+      labels:
+        app: springboot-graalvm-aot
+    spec:
+      containers:
+        - name: app
+          image: mrinmay939/springboot-graalvm-aot:v1.0
+          ports:
+            - containerPort: 8080

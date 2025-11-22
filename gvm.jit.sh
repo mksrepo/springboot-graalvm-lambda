@@ -5,7 +5,7 @@ set -e
 ### CONFIGURATION
 ### ============================
 DOCKERHUB_USER="mrinmay939"
-REPO="springboot-graalvm-aot"
+REPO="springboot-graalvm-jit"
 TAG="v1.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
@@ -16,7 +16,7 @@ DOCKER_DIR="./docker"
 echo "🚀 Step 1: Build Docker Image"
 ### ============================
 
-docker build -f ${DOCKER_DIR}/Dockerfile_AOT -t ${IMAGE} .
+docker build -f ${DOCKER_DIR}/dockerfile_jit -t ${IMAGE} .
 
 echo "✔️ Build complete: ${IMAGE}"
 
@@ -39,10 +39,10 @@ echo "✔️ Image pushed successfully!"
 echo "📥 Step 4: Deploy to Kubernetes"
 ### ============================
 # Update the deployment file with the correct image tag
-sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment.yaml
+sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_jit.yaml
 
-kubectl apply -f ${K8S_DIR}/deployment.yaml
-kubectl apply -f ${K8S_DIR}/service.yaml
+kubectl apply -f ${K8S_DIR}/deployment_jit.yaml
+kubectl apply -f ${K8S_DIR}/service_jit.yaml
 
 echo "⏳ Waiting for pods..."
 sleep 4
@@ -50,5 +50,5 @@ sleep 4
 kubectl get pods
 kubectl get svc
 
-echo "🎉 Deployment complete!"
-echo "🌍 Access your app at: https://localhost:30080/"
+echo "🎉 JIT Deployment complete!"
+echo "🌍 Access your app at: https://localhost:20000/"

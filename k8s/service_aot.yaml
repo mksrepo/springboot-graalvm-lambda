@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: springboot-graalvm-service
+  name: springboot-graalvm-service-aot
 spec:
   type: NodePort
   selector:
-    app: springboot-graalvm
+    app: springboot-graalvm-aot
   ports:
     - port: 80
       targetPort: 8080
