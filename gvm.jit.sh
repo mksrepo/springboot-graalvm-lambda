@@ -10,45 +10,56 @@ TAG="v1.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
 K8S_DIR="./k8s"
-DOCKER_DIR="./docker"
+DOCKERFILE="./docker/dockerfile_jit"
 
 ### ============================
-echo "🚀 Step 1: Build Docker Image"
+### Time Tracking
 ### ============================
+BUILD_START=$(date +%s)
 
-docker build -f ${DOCKER_DIR}/dockerfile_jit -t ${IMAGE} .
+echo "🚀 Step 1: Docker Build"
+docker build -f ${DOCKERFILE} -t ${IMAGE} .
+BUILD_END=$(date +%s)
 
-echo "✔️ Build complete: ${IMAGE}"
-
-
-### ============================
 echo "🔐 Step 2: Docker Hub Login"
-### ============================
 docker login
 
-
-### ============================
+PUSH_START=$(date +%s)
 echo "📤 Step 3: Push to Docker Hub"
-### ============================
 docker push ${IMAGE}
-
-echo "✔️ Image pushed successfully!"
-
+PUSH_END=$(date +%s)
 
 ### ============================
+### Kubernetes Deployment
+### ============================
+DEPLOY_START=$(date +%s)
 echo "📥 Step 4: Deploy to Kubernetes"
-### ============================
-# Update the deployment file with the correct image tag
+
+# Update deployment image reference
 sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_jit.yaml
 
 kubectl apply -f ${K8S_DIR}/deployment_jit.yaml
 kubectl apply -f ${K8S_DIR}/service_jit.yaml
 
-echo "⏳ Waiting for pods..."
-sleep 4
+echo "⏳ Waiting for Kubernetes to create pod..."
+sleep 5
 
 kubectl get pods
 kubectl get svc
+DEPLOY_END=$(date +%s)
 
-echo "🎉 JIT Deployment complete!"
-echo "🌍 Access your app at: https://localhost:20000/"
+### ============================
+### Summary
+### ============================
+echo ""
+echo "==============================="
+echo "📊 FINAL SUMMARY"
+echo "==============================="
+echo "Docker Build Time:      $((BUILD_END - BUILD_START)) seconds"
+echo "Docker Push Time:       $((PUSH_END - PUSH_START)) seconds"
+echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds"
+echo ""
+echo "📦 Image: ${IMAGE}"
+echo "🌐 Service: springboot-graalvm-service-jit"
+echo "🚀 App URL: https://localhost:30002/"
+echo "==============================="
