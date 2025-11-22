@@ -61,5 +61,10 @@ echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds"
 echo ""
 echo "📦 Image: ${IMAGE}"
 echo "🌐 Service: springboot-graalvm-service-aot"
-echo "🚀 App URL: https://localhost:30001/"
+echo "🚀 App URL: https://localhost:30001/hello"
 echo "==============================="
+
+### ============================
+### K6 Load Testing
+### ============================
+k6 run ./k6/script.js --env URL=http://localhost:30001/hello
