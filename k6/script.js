@@ -19,7 +19,7 @@ export default function () {
 
 export function handleSummary(data) {
   return {
-    [`./report/k6_${__ENV.TYPE}.txt`]:
+    [`./report/k6_report_${__ENV.TYPE}.txt`]:
       textSummary(data, { indent: " ", enableColors: false }),
   };
 }
