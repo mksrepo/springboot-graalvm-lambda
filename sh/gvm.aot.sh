@@ -5,12 +5,12 @@ set -e
 ### CONFIGURATION
 ### ============================
 DOCKERHUB_USER="mrinmay939"
-REPO="springboot-graalvm-jit"
+REPO="springboot-graalvm-aot"
 TAG="v2.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
 K8S_DIR="./k8s"
-DOCKERFILE="./docker/dockerfile_jit"
+DOCKERFILE="./docker/dockerfile_aot"
 
 ### ============================
 ### Time Tracking
@@ -36,10 +36,10 @@ DEPLOY_START=$(date +%s)
 echo "📥 Step 4: Deploy to Kubernetes"
 
 # Update deployment image reference
-sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_jit.yaml
+sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_aot.yaml
 
-kubectl apply -f ${K8S_DIR}/deployment_jit.yaml
-kubectl apply -f ${K8S_DIR}/service_jit.yaml
+kubectl apply -f ${K8S_DIR}/deployment_aot.yaml
+kubectl apply -f ${K8S_DIR}/service_aot.yaml
 
 echo "⏳ Waiting for Kubernetes to create pod..."
 sleep 5
@@ -60,11 +60,11 @@ echo "Docker Push Time:       $((PUSH_END - PUSH_START)) seconds"
 echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds"
 echo ""
 echo "📦 Image: ${IMAGE}"
-echo "🌐 Service: springboot-graalvm-service-jit"
-echo "🚀 App URL: https://localhost:30002/hello"
+echo "🌐 Service: springboot-graalvm-service-aot"
+echo "🚀 App URL: https://localhost:30001/hello"
 echo "==============================="
 
 ### ============================
 ### K6 Load Testing
 ### ============================
-k6 run ./k6/script.js --env URL=http://localhost:30002/hello --env TYPE=jit
+k6 run ./k6/script.js --address localhost:6565 --env URL=http://localhost:30001/hello --env TYPE=aot
