@@ -1,0 +1,3 @@
+Docker Build Time:      2 seconds
+Docker Push Time:       6 seconds
+K8s Deployment Time:    6 seconds
