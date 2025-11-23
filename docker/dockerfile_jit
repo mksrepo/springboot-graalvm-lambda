@@ -11,14 +11,20 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
+# Extract layers
+RUN java -Djarmode=layertools -jar target/*.jar extract
+
 # ======== Stage 2: Run the JAR ========
 FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
-# Copy only the final jar from builder
-COPY --from=build /app/target/*.jar app.jar
+# Copy layers
+COPY --from=build /app/dependencies/ ./
+COPY --from=build /app/spring-boot-loader/ ./
+COPY --from=build /app/snapshot-dependencies/ ./
+COPY --from=build /app/application/ ./
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

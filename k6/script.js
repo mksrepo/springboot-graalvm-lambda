@@ -14,7 +14,7 @@ export default function () {
     "status is 200": (r) => r.status === 200,
   });
 
-  sleep(1);
+  // sleep(1); // Removed for max throughput
 }
 
 export function handleSummary(data) {
