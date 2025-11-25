@@ -10,4 +10,7 @@ chmod +x ./sh/gvm.jit.sh
 
 wait
 
+chmod +x ./sh/compare_performance.sh
+./sh/generate_report.sh
+
 echo "Both tasks completed!"

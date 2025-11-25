@@ -1,1 +1,0 @@
-1. need to include docker image size in the cicd report

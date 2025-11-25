@@ -58,6 +58,7 @@ echo "==============================="
 echo "Docker Build Time:      $((BUILD_END - BUILD_START)) seconds" > ./report/cicd_report_jit.txt
 echo "Docker Push Time:       $((PUSH_END - PUSH_START)) seconds" >> ./report/cicd_report_jit.txt
 echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds" >> ./report/cicd_report_jit.txt
+echo "Docker Image Size:      $(docker images ${IMAGE} --format "{{.Size}}")" >> ./report/cicd_report_jit.txt
 echo ""
 echo "📦 Image: ${IMAGE}"
 echo "🌐 Service: springboot-graalvm-service-jit"
