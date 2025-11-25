@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REPORT_DIR="./report"
-OUTPUT_FILE="${REPORT_DIR}/performance_comparison.md"
+OUTPUT_FILE="${REPORT_DIR}/aot_vs_jit.md"
 
 # Function to extract k6 metric
 get_k6_metric() {

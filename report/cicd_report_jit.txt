@@ -1,4 +1,5 @@
-Docker Build Time:      2 seconds
-Docker Push Time:       7 seconds
-K8s Deployment Time:    5 seconds
+Docker Build Time:      2000 ms
+Docker Push Time:       6000 ms
+K8s Deployment Time:    5000 ms
 Docker Image Size:      499MB
+App Start Time:         0 ms
