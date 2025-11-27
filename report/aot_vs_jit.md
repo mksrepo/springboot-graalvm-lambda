@@ -7,22 +7,30 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 
 | Metric | AOT (GraalVM Native Image) | JIT (JVM) |
 | :--- | :--- | :--- |
-| **Total Requests (Iterations)** | 23559 | 7900 |
-| **Throughput (reqs/sec)** | 4696.422036/s | 1579.621839/s |
-| **Avg Response Time** | 2.09ms | 6.28ms |
-| **p95 Response Time** | p(90)=1.36ms | p(90)=2.59ms |
-| **Data Received** | 3.5 MB | 1.2 MB |
-| **Docker Build Time** |      2 seconds |      2 seconds |
-| **Docker Image Size** |      241MB |      499MB |
-| **Docker Push Time** |       7 seconds |       6 seconds |
-| **K8s Deployment Time** |    5 seconds |    5 seconds |
-| **App Start Time** |  |  |
+| **Total Requests (Iterations)** | 25880 | 4608 |
+| **Throughput (reqs/sec)** | 5174.669075/s | 914.478226/s |
+| **Avg Response Time** | 1.89ms | 10.87ms |
+| **p95 Response Time** | p(90)=1.32ms | p(90)=74.11ms |
+| **Data Received** | 3.8 MB | 678 kB |
+| **Docker Build Time** |      1 seconds |      2 seconds |
+| **Docker Image Size** |      150MB |      499MB |
+| **Docker Push Time** |       7 seconds |       7 seconds |
+| **K8s Deployment Time** |    6 seconds |    5 seconds |
+
+## Vulnerability Comparison
+
+| Metric | AOT (GraalVM Native Image) | JIT (JVM) |
+| :--- | :--- | :--- |
+| **Base Image** | distroless/static:nonroo | amazoncorretto:17-alpine |
+| **Total Packages** | 8 | 70 (+62) |
+| **Vulnerabilities** | 0C     0H     0M     0L | 0C     0H     0M     2L |
+
+**Note**: The AOT image uses `distroless/static:nonroo` which has significantly fewer packages and vulnerabilities compared to the `amazoncorretto:17-alpine` base used for JIT.
 
 ## Key Findings
 
-1.  **Throughput**: AOT achieved **4696.422036/s** vs JIT **1579.621839/s**.
-2.  **Latency**: AOT Avg Latency **2.09ms** vs JIT **6.28ms**.
-3.  **Image Size**: AOT Image is **     241MB** vs JIT **     499MB**.
+1.  **Throughput**: AOT achieved **5174.669075/s** vs JIT **914.478226/s**.
+2.  **Latency**: AOT Avg Latency **1.89ms** vs JIT **10.87ms**.
+3.  **Image Size**: AOT Image is **     150MB** vs JIT **     499MB**.
 
 *Generated automatically by sh/generate_report.sh*
-*For more details, please refer to the k6 and cicd reports.*

@@ -20,19 +20,18 @@ COPY ../src src
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -Pnative -DskipTests native:compile
 
+# Ensure binary is executable (since distroless has no chmod)
+RUN chmod +x target/springboot-graalvm-lambda
 
 # =========================================================
 # 2. Minimal runtime for running the native binary locally
 # =========================================================
-FROM debian:bookworm-slim AS final
-# (or ubuntu:24.04, or alpine:latest IF your binary is musl-based)
+FROM gcr.io/distroless/base-debian12 AS final
 
 WORKDIR /app
 
 # Copy native binary from build
 COPY --from=build /workspace/target/springboot-graalvm-lambda /app/app
-
-RUN chmod +x /app/app
 
 # Expose port (if web app)
 EXPOSE 8080
