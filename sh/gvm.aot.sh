@@ -42,7 +42,12 @@ kubectl apply -f ${K8S_DIR}/deployment_aot.yaml
 kubectl apply -f ${K8S_DIR}/service_aot.yaml
 
 echo "⏳ Waiting for Kubernetes to create pod..."
-sleep 5
+# sleep 5 # Removed fixed sleep
+
+# Calculate Startup Time
+STARTUP_TIME=$(./sh/get_startup_time.sh "app=springboot-graalvm-aot")
+echo "${STARTUP_TIME}" > ./report/startup_time_aot.txt
+echo "✅ Pod Started in ${STARTUP_TIME} ms"
 
 kubectl get pods
 kubectl get svc
@@ -58,6 +63,7 @@ echo "==============================="
 echo "Docker Build Time:      $((BUILD_END - BUILD_START)) seconds" > ./report/cicd_report_aot.txt
 echo "Docker Push Time:       $((PUSH_END - PUSH_START)) seconds" >> ./report/cicd_report_aot.txt
 echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds" >> ./report/cicd_report_aot.txt
+echo "Pod Startup Time:       ${STARTUP_TIME} ms" >> ./report/cicd_report_aot.txt
 echo "Docker Image Size:      $(docker images ${IMAGE} --format "{{.Size}}")" >> ./report/cicd_report_aot.txt
 echo ""
 echo "📦 Image: ${IMAGE}"

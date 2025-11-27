@@ -37,6 +37,7 @@ AOT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Bui
 AOT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Push Time")
 AOT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "K8s Deployment Time")
 AOT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Image Size")
+AOT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_aot.txt" 2>/dev/null || echo "N/A")
 
 # Read JIT Metrics
 JIT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 2)
@@ -50,6 +51,7 @@ JIT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Bui
 JIT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Push Time")
 JIT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "K8s Deployment Time")
 JIT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Image Size")
+JIT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_jit.txt" 2>/dev/null || echo "N/A")
 
 echo "Generating image comparison report..."
 docker scout compare "${JIT_IMAGE}" --to "${AOT_IMAGE}" > ./report/vulnerability_report.md
@@ -93,6 +95,7 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 | **Docker Image Size** | ${AOT_IMAGE_SIZE} | ${JIT_IMAGE_SIZE} |
 | **Docker Push Time** | ${AOT_PUSH_TIME} | ${JIT_PUSH_TIME} |
 | **K8s Deployment Time** | ${AOT_DEPLOY_TIME} | ${JIT_DEPLOY_TIME} |
+| **Pod Startup Time** | ${AOT_STARTUP_TIME} ms | ${JIT_STARTUP_TIME} ms |
 
 ## Vulnerability Comparison
 
@@ -109,6 +112,7 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 1.  **Throughput**: AOT achieved **${AOT_THROUGHPUT}** vs JIT **${JIT_THROUGHPUT}**.
 2.  **Latency**: AOT Avg Latency **${AOT_AVG_LATENCY}** vs JIT **${JIT_AVG_LATENCY}**.
 3.  **Image Size**: AOT Image is **${AOT_IMAGE_SIZE}** vs JIT **${JIT_IMAGE_SIZE}**.
+4.  **Startup Time**: AOT started in **${AOT_STARTUP_TIME} ms** vs JIT **${JIT_STARTUP_TIME} ms**.
 
 *Generated automatically by sh/generate_report.sh*
 EOF
