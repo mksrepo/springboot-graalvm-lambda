@@ -3,6 +3,11 @@
 REPORT_DIR="./report"
 OUTPUT_FILE="${REPORT_DIR}/aot_vs_jit.md"
 
+DOCKERHUB_USER="mrinmay939"
+TAG="v2.0"
+JIT_IMAGE="local://${DOCKERHUB_USER}/springboot-graalvm-jit:${TAG}"
+AOT_IMAGE="local://${DOCKERHUB_USER}/springboot-graalvm-aot:${TAG}"
+
 # Function to extract k6 metric
 get_k6_metric() {
     local file=$1
@@ -47,7 +52,7 @@ JIT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "K8s Deplo
 JIT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Image Size")
 
 echo "Generating image comparison report..."
-docker scout compare local://mrinmay939/springboot-graalvm-jit:v2.0 --to local://mrinmay939/springboot-graalvm-aot:v2.0 > ./report/vulnerability_report.md
+docker scout compare "${JIT_IMAGE}" --to "${AOT_IMAGE}" > ./report/vulnerability_report.md
 
 # Function to extract vulnerability metric
 get_vuln_metric() {
