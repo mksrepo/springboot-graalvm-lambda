@@ -17,7 +17,7 @@ Both variants are containerised, pushed to Docker Hub, deployed to a local Kuber
 
 ## Project Structure
 ```
-├── src/main/java/com/mrin/gvm/api/GreetingController.java   # simple "Hello" endpoint
+
 ├── pom.xml                                                # Maven build, native plugin
 ├── sh/gvm.aot.sh                                         # AOT build, push, deploy, report
 ├── sh/gvm.jit.sh                                         # JIT build, push, deploy, report
