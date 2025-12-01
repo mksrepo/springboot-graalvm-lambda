@@ -83,4 +83,4 @@ echo "==============================="
 ### ============================
 ### K6 Load Testing
 ### ============================
-k6 run ./k6/script.js --address localhost:6566 --env URL=http://localhost:30002/hello --env TYPE=jit
+k6 run ./k6/script.js --address localhost:6566 --env URL=http://localhost:30002/api/products --env TYPE=jit
