@@ -41,8 +41,22 @@ sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_jit.yaml
 kubectl apply -f ${K8S_DIR}/deployment_jit.yaml
 kubectl apply -f ${K8S_DIR}/service_jit.yaml
 
+# Force restart to ensure we measure new startup time
+kubectl rollout restart deployment/springboot-graalvm-jit
+
+# Wait for rollout to complete
+kubectl rollout status deployment/springboot-graalvm-jit
+
+echo "⏳ Waiting 10s for service propagation..."
+sleep 10
+
 echo "⏳ Waiting for Kubernetes to create pod..."
-sleep 5
+# sleep 5 # Removed fixed sleep
+
+# Calculate Startup Time
+STARTUP_TIME=$(./sh/get_startup_time.sh "app=springboot-graalvm-jit")
+echo "${STARTUP_TIME}" > ./report/startup_time_jit.txt
+echo "✅ Pod Started in ${STARTUP_TIME} ms"
 
 kubectl get pods
 kubectl get svc
@@ -58,6 +72,8 @@ echo "==============================="
 echo "Docker Build Time:      $((BUILD_END - BUILD_START)) seconds" > ./report/cicd_report_jit.txt
 echo "Docker Push Time:       $((PUSH_END - PUSH_START)) seconds" >> ./report/cicd_report_jit.txt
 echo "K8s Deployment Time:    $((DEPLOY_END - DEPLOY_START)) seconds" >> ./report/cicd_report_jit.txt
+echo "Pod Startup Time:       ${STARTUP_TIME} ms" >> ./report/cicd_report_jit.txt
+echo "Docker Image Size:      $(docker images ${IMAGE} --format "{{.Size}}")" >> ./report/cicd_report_jit.txt
 echo ""
 echo "📦 Image: ${IMAGE}"
 echo "🌐 Service: springboot-graalvm-service-jit"
@@ -67,4 +83,4 @@ echo "==============================="
 ### ============================
 ### K6 Load Testing
 ### ============================
-k6 run ./k6/script.js --address localhost:6566 --env URL=http://localhost:30002/hello --env TYPE=jit
+k6 run ./k6/script.js --address localhost:6566 --env URL=http://localhost:30002/api/products --env TYPE=jit

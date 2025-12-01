@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### macOS ###
+.DS_Store
+
+report/cicd_report_aot.txt
+report/cicd_report_jit.txt
+report/k6_report_aot.txt
+report/k6_report_jit.txt
+report/vulnerability_report.md
