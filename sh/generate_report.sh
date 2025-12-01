@@ -25,32 +25,68 @@ get_cicd_metric() {
 
 echo "Generating comparison report..."
 
-# Read AOT Metrics
-AOT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 2)
-AOT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 3)
-AOT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 2 | sed 's/avg=//')
-AOT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 6 | sed 's/p(95)=//')
-AOT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 2)
-AOT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 3)
+# Read AOT Metrics (with error handling)
+if [ -f "${REPORT_DIR}/k6_report_aot.txt" ]; then
+    AOT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 2)
+    AOT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 3)
+    AOT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 2 | sed 's/avg=//')
+    AOT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 6 | sed 's/p(95)=//')
+    AOT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 2)
+    AOT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 3)
+else
+    echo "⚠️  Warning: AOT K6 report not found, using N/A values"
+    AOT_REQS="N/A"
+    AOT_THROUGHPUT="N/A"
+    AOT_AVG_LATENCY="N/A"
+    AOT_P95_LATENCY="N/A"
+    AOT_DATA="N/A"
+    AOT_DATA_UNIT=""
+fi
 
-AOT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Build Time")
-AOT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Push Time")
-AOT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "K8s Deployment Time")
-AOT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Image Size")
+if [ -f "${REPORT_DIR}/cicd_report_aot.txt" ]; then
+    AOT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Build Time")
+    AOT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Push Time")
+    AOT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "K8s Deployment Time")
+    AOT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_aot.txt" "Docker Image Size")
+else
+    echo "⚠️  Warning: AOT CI/CD report not found, using N/A values"
+    AOT_BUILD_TIME="N/A"
+    AOT_PUSH_TIME="N/A"
+    AOT_DEPLOY_TIME="N/A"
+    AOT_IMAGE_SIZE="N/A"
+fi
 AOT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_aot.txt" 2>/dev/null || echo "N/A")
 
-# Read JIT Metrics
-JIT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 2)
-JIT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 3)
-JIT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 2 | sed 's/avg=//')
-JIT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 6 | sed 's/p(95)=//')
-JIT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 2)
-JIT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 3)
+# Read JIT Metrics (with error handling)
+if [ -f "${REPORT_DIR}/k6_report_jit.txt" ]; then
+    JIT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 2)
+    JIT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 3)
+    JIT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 2 | sed 's/avg=//')
+    JIT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 6 | sed 's/p(95)=//')
+    JIT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 2)
+    JIT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 3)
+else
+    echo "⚠️  Warning: JIT K6 report not found, using N/A values"
+    JIT_REQS="N/A"
+    JIT_THROUGHPUT="N/A"
+    JIT_AVG_LATENCY="N/A"
+    JIT_P95_LATENCY="N/A"
+    JIT_DATA="N/A"
+    JIT_DATA_UNIT=""
+fi
 
-JIT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Build Time")
-JIT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Push Time")
-JIT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "K8s Deployment Time")
-JIT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Image Size")
+if [ -f "${REPORT_DIR}/cicd_report_jit.txt" ]; then
+    JIT_BUILD_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Build Time")
+    JIT_PUSH_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Push Time")
+    JIT_DEPLOY_TIME=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "K8s Deployment Time")
+    JIT_IMAGE_SIZE=$(get_cicd_metric "${REPORT_DIR}/cicd_report_jit.txt" "Docker Image Size")
+else
+    echo "⚠️  Warning: JIT CI/CD report not found, using N/A values"
+    JIT_BUILD_TIME="N/A"
+    JIT_PUSH_TIME="N/A"
+    JIT_DEPLOY_TIME="N/A"
+    JIT_IMAGE_SIZE="N/A"
+fi
 JIT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_jit.txt" 2>/dev/null || echo "N/A")
 
 echo "Generating image comparison report..."
