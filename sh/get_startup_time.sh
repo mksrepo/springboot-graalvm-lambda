@@ -1,25 +1,29 @@
 #!/bin/bash
 set -e
 
-LABEL=$1
-NAMESPACE=${2:-default}
+CONTAINER_NAME=$1
 
-if [ -z "$LABEL" ]; then
-    echo "Usage: $0 <label_selector> [namespace]"
+if [ -z "$CONTAINER_NAME" ]; then
+    echo "Usage: $0 <container_name>"
     exit 1
 fi
 
-# Wait for the pod to be ready
-kubectl wait --for=condition=ready pod -l "$LABEL" -n "$NAMESPACE" --timeout=60s > /dev/null
+# Wait for container to be healthy
+echo "⏳ Waiting for $CONTAINER_NAME to be healthy..." >&2
+until [ "$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null)" == "healthy" ]; do
+    sleep 1
+done
 
-# Get Pod Name (Newest one)
-POD_NAME=$(kubectl get pod -l "$LABEL" -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp -o jsonpath="{.items[-1].metadata.name}")
+# Get Created Timestamp
+CREATED_AT=$(docker inspect --format='{{.Created}}' $CONTAINER_NAME)
 
-# Get Creation Timestamp
-CREATED_AT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath="{.metadata.creationTimestamp}")
+# Get Started Timestamp (Approximate readiness, using StartedAt as base, but ideally we'd want the health check success time. 
+# Docker doesn't expose "HealthChangedAt" easily. 
+# For this approximation, we will use the current time as "Ready" since we just waited for it.)
+# A better approach for "Ready" time in pure Docker is tricky without parsing logs or events.
+# Let's use the time when the loop finished as the "Ready" time.
 
-# Get Ready Condition Timestamp
-READY_AT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].lastTransitionTime}')
+READY_AT=$(date -u +"%Y-%m-%dT%H:%M:%S.%NZ")
 
 # Calculate difference in milliseconds using Python
 python3 -c "
@@ -29,13 +33,21 @@ import sys
 created_str = '$CREATED_AT'
 ready_str = '$READY_AT'
 
-# Handle potential Z suffix
+# Handle potential Z suffix and nano precision
 created_str = created_str.replace('Z', '+00:00')
 ready_str = ready_str.replace('Z', '+00:00')
 
-created = datetime.fromisoformat(created_str)
-ready = datetime.fromisoformat(ready_str)
+# Truncate nanos to micros for python isoformat if needed, or use a robust parser.
+# Docker timestamps can be like 2023-10-27T10:00:00.123456789Z
+# Python 3.7+ handles this reasonably well usually, but let's be safe.
 
-diff = ready - created
-print(int(diff.total_seconds() * 1000))
+try:
+    created = datetime.fromisoformat(created_str)
+    ready = datetime.fromisoformat(ready_str)
+    diff = ready - created
+    print(int(diff.total_seconds() * 1000))
+except ValueError:
+    # Fallback for simpler parsing if needed
+    print('Error parsing dates', file=sys.stderr)
+    print(0)
 "

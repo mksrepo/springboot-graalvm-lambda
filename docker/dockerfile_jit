@@ -19,6 +19,9 @@ FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
 # Copy layers
 COPY --from=build /app/dependencies/ ./
 COPY --from=build /app/spring-boot-loader/ ./

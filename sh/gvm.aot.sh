@@ -30,36 +30,20 @@ docker push ${IMAGE}
 PUSH_END=$(date +%s)
 
 ### ============================
-### Kubernetes Deployment
+### Docker Compose Deployment
 ### ============================
 DEPLOY_START=$(date +%s)
-echo "📥 Step 4: Deploy to Kubernetes"
+echo "📥 Step 4: Deploy with Docker Compose"
 
-# Update deployment image reference
-sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_aot.yaml
-
-kubectl apply -f ${K8S_DIR}/deployment_aot.yaml
-kubectl apply -f ${K8S_DIR}/service_aot.yaml
-
-# Force restart to ensure we measure new startup time
-kubectl rollout restart deployment/springboot-graalvm-aot
-
-# Wait for rollout to complete
-kubectl rollout status deployment/springboot-graalvm-aot
-
-echo "⏳ Waiting 10s for service propagation..."
-sleep 10
-
-echo "⏳ Waiting for Kubernetes to create pod..."
-# sleep 5 # Removed fixed sleep
+# Deploy AOT service
+docker compose up -d --build springboot-graalvm-aot
 
 # Calculate Startup Time
-STARTUP_TIME=$(./sh/get_startup_time.sh "app=springboot-graalvm-aot")
+STARTUP_TIME=$(./sh/get_startup_time.sh "springboot-graalvm-aot")
 echo "${STARTUP_TIME}" > ./report/startup_time_aot.txt
-echo "✅ Pod Started in ${STARTUP_TIME} ms"
+echo "✅ Container Started in ${STARTUP_TIME} ms"
 
-kubectl get pods
-kubectl get svc
+docker compose ps
 DEPLOY_END=$(date +%s)
 
 ### ============================

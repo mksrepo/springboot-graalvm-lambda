@@ -2,6 +2,10 @@
 
 echo "Starting AOT and JIT tasks in parallel"
 
+# Start Monitoring Stack
+echo "🚀 Starting Prometheus and Grafana..."
+docker compose up -d prometheus grafana
+
 chmod +x ./sh/gvm.aot.sh
 chmod +x ./sh/gvm.jit.sh
 

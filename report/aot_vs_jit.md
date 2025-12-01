@@ -7,32 +7,32 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 
 | Metric | AOT (GraalVM Native Image) | JIT (JVM) |
 | :--- | :--- | :--- |
-| **Total Requests (Iterations)** | 6566 | 2114 |
-| **Throughput (reqs/sec)** | 218.01591/s | 70.163646/s |
-| **Avg Response Time** | 45.66ms | 142.15ms |
-| **p95 Response Time** | p(90)=102.4ms | p(90)=204.37ms |
-| **Data Received** | 528 MB | 55 MB |
-| **Docker Build Time** |      2 seconds |      1 seconds |
-| **Docker Image Size** |      337MB |      564MB |
-| **Docker Push Time** |       7 seconds |       7 seconds |
-| **K8s Deployment Time** |    17 seconds |    24 seconds |
-| **Pod Startup Time** | 6000 ms | 12000 ms |
+| **Total Requests (Iterations)** | 6538 | 2668 |
+| **Throughput (reqs/sec)** | 217.16095/s | 88.433633/s |
+| **Avg Response Time** | 45.91ms | 112.76ms |
+| **p95 Response Time** | p(90)=100.78ms | p(90)=200.42ms |
+| **Data Received** | 524 MB | 87 MB |
+| **Docker Build Time** |      10 seconds |      126 seconds |
+| **Docker Image Size** |      358MB |      576MB |
+| **Docker Push Time** |       25 seconds |       24 seconds |
+| **K8s Deployment Time** |    23 seconds |    24 seconds |
+| **Pod Startup Time** | 17884 ms | 17783 ms |
 
 ## Vulnerability Comparison
 
 | Metric | AOT (GraalVM Native Image) | JIT (JVM) |
 | :--- | :--- | :--- |
 | **Base Image** | debian:12-slim | amazoncorretto:17-alpine |
-| **Total Packages** | 126 | 98 (-28) |
-| **Vulnerabilities** | 0C     0H     1M    24L | 0C     0H     0M     2L |
+| **Total Packages** | 152 | 117 (-35) |
+| **Vulnerabilities** | 0C     0H     1M    36L | 0C     0H     1M     2L |
 
 **Note**: The AOT image uses `debian:12-slim` which has significantly fewer packages and vulnerabilities compared to the `amazoncorretto:17-alpine` base used for JIT.
 
 ## Key Findings
 
-1.  **Throughput**: AOT achieved **218.01591/s** vs JIT **70.163646/s**.
-2.  **Latency**: AOT Avg Latency **45.66ms** vs JIT **142.15ms**.
-3.  **Image Size**: AOT Image is **     337MB** vs JIT **     564MB**.
-4.  **Startup Time**: AOT started in **6000 ms** vs JIT **12000 ms**.
+1.  **Throughput**: AOT achieved **217.16095/s** vs JIT **88.433633/s**.
+2.  **Latency**: AOT Avg Latency **45.91ms** vs JIT **112.76ms**.
+3.  **Image Size**: AOT Image is **     358MB** vs JIT **     576MB**.
+4.  **Startup Time**: AOT started in **17884 ms** vs JIT **17783 ms**.
 
 *Generated automatically by sh/generate_report.sh*
