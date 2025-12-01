@@ -2,6 +2,10 @@
 
 echo "Starting AOT and JIT tasks in parallel"
 
+# Run cleanup
+chmod +x ./sh/cleanup.sh
+./sh/cleanup.sh
+
 # Start Monitoring Stack
 echo "🚀 Starting Prometheus and Grafana..."
 docker compose up -d prometheus grafana
