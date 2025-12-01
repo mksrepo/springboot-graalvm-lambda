@@ -41,6 +41,15 @@ sed -i '' "s|image: .*|image: ${IMAGE}|g" ${K8S_DIR}/deployment_jit.yaml
 kubectl apply -f ${K8S_DIR}/deployment_jit.yaml
 kubectl apply -f ${K8S_DIR}/service_jit.yaml
 
+# Force restart to ensure we measure new startup time
+kubectl rollout restart deployment/springboot-graalvm-jit
+
+# Wait for rollout to complete
+kubectl rollout status deployment/springboot-graalvm-jit
+
+echo "⏳ Waiting 10s for service propagation..."
+sleep 10
+
 echo "⏳ Waiting for Kubernetes to create pod..."
 # sleep 5 # Removed fixed sleep
 

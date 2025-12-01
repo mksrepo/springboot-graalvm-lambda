@@ -7,16 +7,16 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 
 | Metric | AOT (GraalVM Native Image) | JIT (JVM) |
 | :--- | :--- | :--- |
-| **Total Requests (Iterations)** | 18968 | 5434 |
-| **Throughput (reqs/sec)** | 3757.18015/s | 1068.673796/s |
-| **Avg Response Time** | 2.63ms | 9.16ms |
-| **p95 Response Time** | p(90)=1.42ms | p(90)=22.93ms |
-| **Data Received** | 2.8 MB | 800 kB |
-| **Docker Build Time** |      1 seconds |      2 seconds |
+| **Total Requests (Iterations)** | 23375 | 1099 |
+| **Throughput (reqs/sec)** | 4622.182323/s | 217.277495/s |
+| **Avg Response Time** | 2.12ms | 45.92ms |
+| **p95 Response Time** | p(90)=1.32ms | p(90)=98.34ms |
+| **Data Received** | 3.4 MB | 162 kB |
+| **Docker Build Time** |      3 seconds |      2 seconds |
 | **Docker Image Size** |      337MB |      564MB |
 | **Docker Push Time** |       7 seconds |       7 seconds |
-| **K8s Deployment Time** |    0 seconds |    0 seconds |
-| **Pod Startup Time** | 0 ms | 434578000 ms |
+| **K8s Deployment Time** |    17 seconds |    23 seconds |
+| **Pod Startup Time** | 5000 ms | 12000 ms |
 
 ## Vulnerability Comparison
 
@@ -30,9 +30,9 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 
 ## Key Findings
 
-1.  **Throughput**: AOT achieved **3757.18015/s** vs JIT **1068.673796/s**.
-2.  **Latency**: AOT Avg Latency **2.63ms** vs JIT **9.16ms**.
+1.  **Throughput**: AOT achieved **4622.182323/s** vs JIT **217.277495/s**.
+2.  **Latency**: AOT Avg Latency **2.12ms** vs JIT **45.92ms**.
 3.  **Image Size**: AOT Image is **     337MB** vs JIT **     564MB**.
-4.  **Startup Time**: AOT started in **0 ms** vs JIT **434578000 ms**.
+4.  **Startup Time**: AOT started in **5000 ms** vs JIT **12000 ms**.
 
 *Generated automatically by sh/generate_report.sh*

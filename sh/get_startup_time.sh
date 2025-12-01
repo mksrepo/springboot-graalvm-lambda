@@ -12,8 +12,8 @@ fi
 # Wait for the pod to be ready
 kubectl wait --for=condition=ready pod -l "$LABEL" -n "$NAMESPACE" --timeout=60s > /dev/null
 
-# Get Pod Name
-POD_NAME=$(kubectl get pod -l "$LABEL" -n "$NAMESPACE" -o jsonpath="{.items[0].metadata.name}")
+# Get Pod Name (Newest one)
+POD_NAME=$(kubectl get pod -l "$LABEL" -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp -o jsonpath="{.items[-1].metadata.name}")
 
 # Get Creation Timestamp
 CREATED_AT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath="{.metadata.creationTimestamp}")
