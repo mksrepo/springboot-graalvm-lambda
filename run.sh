@@ -10,6 +10,12 @@ chmod +x ./sh/cleanup.sh
 echo "🚀 Starting Prometheus and Grafana..."
 docker compose up -d prometheus grafana
 
+# Copy Grafana Dashboard (workaround for Docker Desktop permission issues)
+echo "📊 Configuring Grafana Dashboard..."
+sleep 5 # Wait for containers to initialize
+docker cp docker/grafana/provisioning/dashboards/jvm-micrometer.json grafana:/etc/grafana/provisioning/dashboards/
+docker restart grafana
+
 chmod +x ./sh/gvm.aot.sh
 chmod +x ./sh/gvm.jit.sh
 
