@@ -1,34 +1,53 @@
 #!/bin/bash
 
-echo "Starting AOT and JIT tasks in parallel"
+echo "🚀 Starting AOT and JIT deployment to Kubernetes"
 
 # Run cleanup
 chmod +x ./scripts/cleanup.sh
 ./scripts/cleanup.sh
 
 # Start Monitoring Stack
-echo "🚀 Starting Prometheus and Grafana..."
-docker compose up -d prometheus grafana
+echo "📊 Starting Prometheus and Grafana in Kubernetes..."
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/prometheus.yaml
+kubectl apply -f k8s/grafana.yaml
 
-# Copy Grafana Dashboard (workaround for Docker Desktop permission issues)
-echo "📊 Configuring Grafana Dashboard..."
-sleep 5 # Wait for containers to initialize
-docker cp docker/grafana/provisioning/dashboards/jvm-micrometer.json grafana:/etc/grafana/provisioning/dashboards/
-docker restart grafana
+# Wait for monitoring to be ready
+echo "⏳ Waiting for monitoring stack..."
+kubectl wait --for=condition=available --timeout=60s deployment/prometheus -n springboot-graalvm 2>/dev/null || true
+kubectl wait --for=condition=available --timeout=60s deployment/grafana -n springboot-graalvm 2>/dev/null || true
 
+# Make scripts executable
 chmod +x ./scripts/gvm.aot.sh
 chmod +x ./scripts/gvm.jit.sh
+chmod +x ./scripts/get_startup_time.sh
 
-./scripts/gvm.aot.sh &
-./scripts/gvm.jit.sh &
+# Run AOT and JIT deployments sequentially
+./scripts/gvm.aot.sh
+./scripts/gvm.jit.sh
 
 wait
 
+# Generate performance report
 chmod +x ./scripts/generate_report.sh
 ./scripts/generate_report.sh
 
-echo "Both tasks completed!"
-
-# su docker login
-# chmod +x run.sh
-# ./run.sh
+echo ""
+echo "✅ Both tasks completed!"
+echo ""
+echo "================================"
+echo "📊 Access Points"
+echo "================================"
+echo "  AOT Application:  http://localhost:30001/api/products"
+echo "  JIT Application:  http://localhost:30002/api/products"
+echo "  Prometheus:       http://localhost:30003"
+echo "  Grafana:          http://localhost:30004 (admin/admin)"
+echo ""
+echo "================================"
+echo "🔍 Useful Commands"
+echo "================================"
+echo "  View pods:   kubectl get pods -n springboot-graalvm"
+echo "  View logs:   kubectl logs -f <pod-name> -n springboot-graalvm"
+echo "  Cleanup:     ./scripts/cleanup.sh"
+echo "  Report:      cat report/aot_vs_jit.md"
+echo "================================"

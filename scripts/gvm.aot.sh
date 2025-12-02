@@ -29,20 +29,31 @@ docker push ${IMAGE}
 PUSH_END=$(date +%s)
 
 ### ============================
-### Docker Compose Deployment
+### Kubernetes Deployment
 ### ============================
 DEPLOY_START=$(date +%s)
-echo "📥 Step 4: Deploy with Docker Compose"
+echo "📥 Step 4: Deploy to Kubernetes"
 
-# Deploy AOT service
-docker compose up -d --build springboot-graalvm-aot
+# Apply namespace
+kubectl apply -f k8s/namespace.yaml
 
-# Calculate Startup Time
+# Deploy AOT application
+kubectl apply -f k8s/deployment-aot.yaml
+
+# Wait for deployment to be ready
+echo "⏳ Waiting for AOT deployment to be ready..."
+kubectl wait --for=condition=available --timeout=120s deployment/springboot-graalvm-aot -n springboot-graalvm
+
+# Get pod startup time
+POD_NAME=$(kubectl get pods -n springboot-graalvm -l app=springboot-graalvm-aot -o jsonpath='{.items[0].metadata.name}')
+echo "📦 Pod Name: ${POD_NAME}"
+
+# Calculate startup time using pod creation time
 STARTUP_TIME=$(./scripts/get_startup_time.sh "springboot-graalvm-aot")
 echo "${STARTUP_TIME}" > ./report/startup_time_aot.txt
-echo "✅ Container Started in ${STARTUP_TIME} ms"
+echo "✅ Pod started in ${STARTUP_TIME} ms"
 
-docker compose ps
+kubectl get pods -n springboot-graalvm
 DEPLOY_END=$(date +%s)
 
 ### ============================
@@ -59,8 +70,8 @@ echo "Pod Startup Time:       ${STARTUP_TIME} ms" >> ./report/cicd_report_aot.tx
 echo "Docker Image Size:      $(docker images ${IMAGE} --format "{{.Size}}")" >> ./report/cicd_report_aot.txt
 echo ""
 echo "📦 Image: ${IMAGE}"
-echo "🌐 Service: springboot-graalvm-service-aot"
-echo "🚀 App URL: https://localhost:30001/hello"
+echo "🌐 Service: springboot-graalvm-aot"
+echo "🚀 App URL: http://localhost:30001/api/products"
 echo "==============================="
 
 ### ============================

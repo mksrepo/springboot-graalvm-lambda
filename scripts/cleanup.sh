@@ -1,16 +1,12 @@
 #!/bin/bash
 
-echo "🧹 Cleaning up previous deployments..."
+echo "🧹 Cleaning up Kubernetes resources..."
 
-# 1. Clean up Kubernetes resources if present (to avoid port conflicts)
-if command -v kubectl &> /dev/null; then
-    echo "   - Checking for lingering Kubernetes resources..."
-    kubectl delete deployment --all --ignore-not-found=true &> /dev/null
-    kubectl delete service --all --ignore-not-found=true &> /dev/null
-fi
+# Delete all resources in the namespace
+kubectl delete namespace springboot-graalvm --ignore-not-found=true
 
-# 2. Clean up Docker Compose containers
-echo "   - Stopping existing Docker Compose containers..."
-docker compose down --remove-orphans &> /dev/null
+# Wait for namespace to be deleted
+echo "⏳ Waiting for namespace deletion..."
+kubectl wait --for=delete namespace/springboot-graalvm --timeout=60s 2>/dev/null || true
 
-echo "✅ Cleanup complete."
+echo "✅ Cleanup complete!"

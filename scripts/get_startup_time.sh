@@ -1,53 +1,38 @@
 #!/bin/bash
-set -e
 
-CONTAINER_NAME=$1
+# Get pod startup time in milliseconds
+# Usage: ./get_startup_time.sh <app-label>
 
-if [ -z "$CONTAINER_NAME" ]; then
-    echo "Usage: $0 <container_name>"
-    exit 1
+APP_LABEL=$1
+NAMESPACE="springboot-graalvm"
+
+# Get the most recent pod
+POD_NAME=$(kubectl get pods -n ${NAMESPACE} -l app=${APP_LABEL} --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}' 2>/dev/null)
+
+if [ -z "$POD_NAME" ]; then
+    echo "0"
+    exit 0
 fi
 
-# Wait for container to be healthy
-echo "⏳ Waiting for $CONTAINER_NAME to be healthy..." >&2
-until [ "$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null)" == "healthy" ]; do
-    sleep 1
-done
+# Get pod creation time and container ready time
+CREATED=$(kubectl get pod ${POD_NAME} -n ${NAMESPACE} -o jsonpath='{.metadata.creationTimestamp}')
+READY=$(kubectl get pod ${POD_NAME} -n ${NAMESPACE} -o jsonpath='{.status.conditions[?(@.type=="Ready")].lastTransitionTime}')
 
-# Get Created Timestamp
-CREATED_AT=$(docker inspect --format='{{.Created}}' $CONTAINER_NAME)
+if [ -z "$CREATED" ] || [ -z "$READY" ]; then
+    echo "0"
+    exit 0
+fi
 
-# Get Started Timestamp (Approximate readiness, using StartedAt as base, but ideally we'd want the health check success time. 
-# Docker doesn't expose "HealthChangedAt" easily. 
-# For this approximation, we will use the current time as "Ready" since we just waited for it.)
-# A better approach for "Ready" time in pure Docker is tricky without parsing logs or events.
-# Let's use the time when the loop finished as the "Ready" time.
+# Convert to seconds since epoch
+CREATED_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CREATED" "+%s" 2>/dev/null || date -d "$CREATED" "+%s" 2>/dev/null)
+READY_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$READY" "+%s" 2>/dev/null || date -d "$READY" "+%s" 2>/dev/null)
 
-READY_AT=$(date -u +"%Y-%m-%dT%H:%M:%S.%NZ")
+# Calculate difference in milliseconds
+STARTUP_MS=$(( (READY_SEC - CREATED_SEC) * 1000 ))
 
-# Calculate difference in milliseconds using Python
-python3 -c "
-from datetime import datetime
-import sys
+# Ensure positive value
+if [ $STARTUP_MS -lt 0 ]; then
+    STARTUP_MS=0
+fi
 
-created_str = '$CREATED_AT'
-ready_str = '$READY_AT'
-
-# Handle potential Z suffix and nano precision
-created_str = created_str.replace('Z', '+00:00')
-ready_str = ready_str.replace('Z', '+00:00')
-
-# Truncate nanos to micros for python isoformat if needed, or use a robust parser.
-# Docker timestamps can be like 2023-10-27T10:00:00.123456789Z
-# Python 3.7+ handles this reasonably well usually, but let's be safe.
-
-try:
-    created = datetime.fromisoformat(created_str)
-    ready = datetime.fromisoformat(ready_str)
-    diff = ready - created
-    print(int(diff.total_seconds() * 1000))
-except ValueError:
-    # Fallback for simpler parsing if needed
-    print('Error parsing dates', file=sys.stderr)
-    print(0)
-"
+echo $STARTUP_MS

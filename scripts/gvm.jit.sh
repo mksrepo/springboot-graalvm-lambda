@@ -29,20 +29,31 @@ docker push ${IMAGE}
 PUSH_END=$(date +%s)
 
 ### ============================
-### Docker Compose Deployment
+### Kubernetes Deployment
 ### ============================
 DEPLOY_START=$(date +%s)
-echo "📥 Step 4: Deploy with Docker Compose"
+echo "📥 Step 4: Deploy to Kubernetes"
 
-# Deploy JIT service
-docker compose up -d --build springboot-graalvm-jit
+# Apply namespace
+kubectl apply -f k8s/namespace.yaml
 
-# Calculate Startup Time
+# Deploy JIT application
+kubectl apply -f k8s/deployment-jit.yaml
+
+# Wait for deployment to be ready
+echo "⏳ Waiting for JIT deployment to be ready..."
+kubectl wait --for=condition=available --timeout=120s deployment/springboot-graalvm-jit -n springboot-graalvm
+
+# Get pod startup time
+POD_NAME=$(kubectl get pods -n springboot-graalvm -l app=springboot-graalvm-jit -o jsonpath='{.items[0].metadata.name}')
+echo "📦 Pod Name: ${POD_NAME}"
+
+# Calculate startup time
 STARTUP_TIME=$(./scripts/get_startup_time.sh "springboot-graalvm-jit")
 echo "${STARTUP_TIME}" > ./report/startup_time_jit.txt
-echo "✅ Container Started in ${STARTUP_TIME} ms"
+echo "✅ Pod started in ${STARTUP_TIME} ms"
 
-docker compose ps
+kubectl get pods -n springboot-graalvm
 DEPLOY_END=$(date +%s)
 
 ### ============================
@@ -59,8 +70,8 @@ echo "Pod Startup Time:       ${STARTUP_TIME} ms" >> ./report/cicd_report_jit.tx
 echo "Docker Image Size:      $(docker images ${IMAGE} --format "{{.Size}}")" >> ./report/cicd_report_jit.txt
 echo ""
 echo "📦 Image: ${IMAGE}"
-echo "🌐 Service: springboot-graalvm-service-jit"
-echo "🚀 App URL: https://localhost:30002/hello"
+echo "🌐 Service: springboot-graalvm-jit"
+echo "🚀 App URL: http://localhost:30002/api/products"
 echo "==============================="
 
 ### ============================
