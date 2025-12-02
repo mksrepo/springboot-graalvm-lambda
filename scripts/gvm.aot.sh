@@ -9,7 +9,6 @@ REPO="springboot-graalvm-aot"
 TAG="v2.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
-K8S_DIR="./k8s"
 DOCKERFILE="./docker/dockerfile_aot"
 
 ### ============================
