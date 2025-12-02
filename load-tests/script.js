@@ -4,7 +4,7 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 export let options = {
   vus: 10,
-  duration: "3m",
+  duration: "5s",
 };
 
 export default function () {

@@ -19,10 +19,10 @@ Both variants are containerised, pushed to Docker Hub, deployed to a local Kuber
 ```
 
 ├── pom.xml                                                # Maven build, native plugin
-├── sh/gvm.aot.sh                                         # AOT build, push, deploy, report
-├── sh/gvm.jit.sh                                         # JIT build, push, deploy, report
-├── sh/generate_report.sh                                 # Generates aot_vs_jit.md
-├── k6/script.js                                          # k6 load test (10 VUs, 5 s)
+├── scripts/gvm.aot.sh                                         # AOT build, push, deploy, report
+├── scripts/gvm.jit.sh                                         # JIT build, push, deploy, report
+├── scripts/generate_report.sh                                 # Generates aot_vs_jit.md
+├── load-tests/script.js                                          # k6 load test (10 VUs, 5 s)
 ├── report/                                               # CI/CD metrics & comparison report
 └── k8s/                                                 # Deployment & Service yaml files
 ```
@@ -30,8 +30,8 @@ Both variants are containerised, pushed to Docker Hub, deployed to a local Kuber
 ## Building & Deploying
 ### AOT (Native Image)
 ```bash
-chmod +x sh/gvm.aot.sh
-./sh/gvm.aot.sh
+chmod +x scripts/gvm.aot.sh
+./scripts/gvm.aot.sh
 ```
 The script will:
 1. Build the native image Docker image.
@@ -42,15 +42,15 @@ The script will:
 
 ### JIT (JVM)
 ```bash
-chmod +x sh/gvm.jit.sh
-./sh/gvm.jit.sh
+chmod +x scripts/gvm.jit.sh
+./scripts/gvm.jit.sh
 ```
 Same steps as AOT but using the standard JVM image.
 
 ## Load Testing with k6
 Both scripts invoke k6 after deployment:
 ```bash
-k6 run ./k6/script.js --address localhost:6565 \
+k6 run ./load-tests/script.js --address localhost:6565 \
     --env URL=http://localhost:30001/hello --env TYPE=aot
 ```
 and similarly for JIT (port 6566, URL 30002). Results are stored in `report/k6_report_aot.txt` and `report/k6_report_jit.txt`.
@@ -58,8 +58,8 @@ and similarly for JIT (port 6566, URL 30002). Results are stored in `report/
 ## Generating the Performance Comparison Report
 After both builds have completed, run:
 ```bash
-chmod +x sh/generate_report.sh
-./sh/generate_report.sh
+chmod +x scripts/generate_report.sh
+./scripts/generate_report.sh
 ```
 The script reads the k6 and CI/CD metric files and creates `report/aot_vs_jit.md` containing a side‑by‑side table of:
 - Total requests, throughput, latency

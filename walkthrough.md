@@ -3,7 +3,7 @@
 ## Changes
 
 ### Scripts
-#### [NEW] [compare_performance.sh](file:///Users/mrinmaysantra/Documents/Workspace/Antigravity/springboot-graalvm-lambda/sh/compare_performance.sh)
+#### [NEW] [compare_performance.sh](file:///Users/mrinmaysantra/Documents/Workspace/Antigravity/springboot-graalvm-lambda/scripts/generate_report.sh)
 - Created a Bash script that parses the k6 and CI/CD text reports.
 - Extracts key metrics: Requests, Throughput, Latency, Build Time, and Image Size.
 - Generates a formatted Markdown report at `report/performance_comparison.md`.
@@ -14,7 +14,7 @@
 ## Verification Results
 
 ### Automated Verification
-- Ran `sh/compare_performance.sh` manually to test the logic.
+- Ran `scripts/generate_report.sh` manually to test the logic.
 - **Result**: The script successfully generated `report/performance_comparison.md` with populated values from the existing report files.
 
 ### Generated Report Content

@@ -39,7 +39,7 @@ echo "📥 Step 4: Deploy with Docker Compose"
 docker compose up -d --build springboot-graalvm-aot
 
 # Calculate Startup Time
-STARTUP_TIME=$(./sh/get_startup_time.sh "springboot-graalvm-aot")
+STARTUP_TIME=$(./scripts/get_startup_time.sh "springboot-graalvm-aot")
 echo "${STARTUP_TIME}" > ./report/startup_time_aot.txt
 echo "✅ Container Started in ${STARTUP_TIME} ms"
 
@@ -67,4 +67,4 @@ echo "==============================="
 ### ============================
 ### K6 Load Testing
 ### ============================
-k6 run ./k6/script.js --address localhost:6565 --env URL=http://localhost:30001/api/products --env TYPE=aot
+k6 run ./load-tests/script.js --address localhost:6565 --env URL=http://localhost:30001/api/products --env TYPE=aot

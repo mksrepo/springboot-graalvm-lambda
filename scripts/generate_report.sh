@@ -150,7 +150,7 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 3.  **Image Size**: AOT Image is **${AOT_IMAGE_SIZE}** vs JIT **${JIT_IMAGE_SIZE}**.
 4.  **Startup Time**: AOT started in **${AOT_STARTUP_TIME} ms** vs JIT **${JIT_STARTUP_TIME} ms**.
 
-*Generated automatically by sh/generate_report.sh*
+*Generated automatically by scripts/generate_report.sh*
 EOF
 
 echo "Report generated at ${OUTPUT_FILE}"

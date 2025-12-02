@@ -39,7 +39,7 @@ echo "📥 Step 4: Deploy with Docker Compose"
 docker compose up -d --build springboot-graalvm-jit
 
 # Calculate Startup Time
-STARTUP_TIME=$(./sh/get_startup_time.sh "springboot-graalvm-jit")
+STARTUP_TIME=$(./scripts/get_startup_time.sh "springboot-graalvm-jit")
 echo "${STARTUP_TIME}" > ./report/startup_time_jit.txt
 echo "✅ Container Started in ${STARTUP_TIME} ms"
 
@@ -67,4 +67,4 @@ echo "==============================="
 ### ============================
 ### K6 Load Testing
 ### ============================
-k6 run ./k6/script.js --address localhost:6566 --env URL=http://localhost:30002/api/products --env TYPE=jit
+k6 run ./load-tests/script.js --address localhost:6566 --env URL=http://localhost:30002/api/products --env TYPE=jit
