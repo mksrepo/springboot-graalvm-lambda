@@ -89,28 +89,6 @@ else
 fi
 JIT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_jit.txt" 2>/dev/null || echo "N/A")
 
-echo "Generating image comparison report..."
-docker scout compare "${JIT_IMAGE}" --to "${AOT_IMAGE}" > ./report/vulnerability_report.md
-
-# Function to extract vulnerability metric
-get_vuln_metric() {
-    local key=$1
-    local column=$2 # 2 for JIT, 3 for AOT
-    grep "${key}" "${REPORT_DIR}/vulnerability_report.md" | head -n 1 | awk -F'│' -v c="$column" '{print $c}' | sed 's/^[ \t]*//;s/[ \t]*$//'
-}
-
-# Read Vulnerability Metrics
-# Note: In vulnerability_report.md, Column 2 is JIT, Column 3 is AOT (based on the header analysis)
-JIT_BASE_IMAGE=$(get_vuln_metric "Base image" 2)
-AOT_BASE_IMAGE=$(get_vuln_metric "Base image" 3)
-
-JIT_PACKAGES=$(get_vuln_metric "packages" 2)
-AOT_PACKAGES=$(get_vuln_metric "packages" 3)
-
-JIT_VULN=$(get_vuln_metric "vulnerabilities" 2)
-AOT_VULN=$(get_vuln_metric "vulnerabilities" 3)
-
-
 # Generate Markdown
 cat <<EOF > "${OUTPUT_FILE}"
 # Performance Comparison: AOT vs JIT
@@ -132,16 +110,6 @@ This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native I
 | **Docker Push Time** | ${AOT_PUSH_TIME} | ${JIT_PUSH_TIME} |
 | **K8s Deployment Time** | ${AOT_DEPLOY_TIME} | ${JIT_DEPLOY_TIME} |
 | **Pod Startup Time** | ${AOT_STARTUP_TIME} ms | ${JIT_STARTUP_TIME} ms |
-
-## Vulnerability Comparison
-
-| Metric | AOT (GraalVM Native Image) | JIT (JVM) |
-| :--- | :--- | :--- |
-| **Base Image** | ${AOT_BASE_IMAGE} | ${JIT_BASE_IMAGE} |
-| **Total Packages** | ${AOT_PACKAGES} | ${JIT_PACKAGES} |
-| **Vulnerabilities** | ${AOT_VULN} | ${JIT_VULN} |
-
-**Note**: The AOT image uses \`${AOT_BASE_IMAGE}\` which has significantly fewer packages and vulnerabilities compared to the \`${JIT_BASE_IMAGE}\` base used for JIT.
 
 ## Key Findings
 

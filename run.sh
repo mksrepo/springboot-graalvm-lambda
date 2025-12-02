@@ -19,8 +19,8 @@ docker restart grafana
 chmod +x ./scripts/gvm.aot.sh
 chmod +x ./scripts/gvm.jit.sh
 
-./scripts/gvm.aot.sh
-./scripts/gvm.jit.sh
+./scripts/gvm.aot.sh &
+./scripts/gvm.jit.sh &
 
 wait
 

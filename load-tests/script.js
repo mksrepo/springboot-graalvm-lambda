@@ -1,10 +1,12 @@
+// Load test script for Spring Boot application
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
+// Load environment variables
 export let options = {
   vus: 10,
-  duration: "5s",
+  duration: "5m",
 };
 
 export default function () {
