@@ -9,7 +9,7 @@ REPO="springboot-graalvm-jit"
 TAG="v2.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
-DOCKERFILE="./docker/dockerfile_jit"
+DOCKERFILE="./dockerfiles/jit.dockerfile"
 
 ### ============================
 ### Time Tracking

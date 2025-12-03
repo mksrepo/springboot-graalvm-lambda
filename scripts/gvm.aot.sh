@@ -9,7 +9,7 @@ REPO="springboot-graalvm-aot"
 TAG="v2.0"
 IMAGE="${DOCKERHUB_USER}/${REPO}:${TAG}"
 
-DOCKERFILE="./docker/dockerfile_aot"
+DOCKERFILE="./dockerfiles/aot.dockerfile"
 
 ### ============================
 ### Time Tracking

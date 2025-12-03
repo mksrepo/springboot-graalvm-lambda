@@ -31,7 +31,7 @@ management:
         enabled: true
   metrics:
     tags:
-      application: ${spring.application.name}
+      env: production
 
 # Chaos Monkey Configuration
 chaos:

@@ -17,14 +17,31 @@ Both variants are containerised, pushed to Docker Hub, deployed to a local Kuber
 
 ## Project Structure
 ```
-
-├── pom.xml                                                # Maven build, native plugin
-├── scripts/gvm.aot.sh                                         # AOT build, push, deploy, report
-├── scripts/gvm.jit.sh                                         # JIT build, push, deploy, report
-├── scripts/generate_report.sh                                 # Generates aot_vs_jit.md
-├── load-tests/script.js                                          # k6 load test (10 VUs, 5 s)
-├── report/                                               # CI/CD metrics & comparison report
-└── k8s/                                                 # Deployment & Service yaml files
+├── pom.xml                             # Maven build configuration
+├── src/                                # Spring Boot source code
+├── run.sh                              # Main deployment script
+├── dockerfiles/                        # Docker build files
+│   ├── aot.dockerfile                  # GraalVM native image build
+│   └── jit.dockerfile                  # Standard JVM build
+├── k8s/                                # Kubernetes manifests
+│   ├── namespace.yaml                  # Namespace definition
+│   ├── deployment-aot.yaml             # AOT deployment
+│   ├── deployment-jit.yaml             # JIT deployment
+│   ├── postgres.yaml                   # PostgreSQL database
+│   ├── prometheus.yaml                 # Prometheus monitoring
+│   └── grafana.yaml                    # Grafana dashboards
+├── provisioning/                       # Grafana provisioning files
+│   ├── dashboards/                     # Dashboard JSON files
+│   └── datasources/                    # Datasource configurations
+├── scripts/                            # Build and deployment scripts
+│   ├── gvm.aot.sh                      # AOT build pipeline
+│   ├── gvm.jit.sh                      # JIT build pipeline
+│   ├── generate_report.sh              # Performance report generator
+│   ├── get_startup_time.sh             # Startup time calculator
+│   └── cleanup.sh                      # Cleanup script
+├── load-tests/                         # K6 load testing scripts
+│   └── script.js                       # Load test configuration
+└── report/                             # Generated reports and metrics
 ```
 
 ## Building & Deploying

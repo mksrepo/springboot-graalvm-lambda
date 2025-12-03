@@ -11,6 +11,14 @@ echo "📊 Starting Prometheus, Grafana, and PostgreSQL in Kubernetes..."
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/postgres.yaml
 kubectl apply -f k8s/prometheus.yaml
+
+# Create Grafana Dashboard ConfigMap
+kubectl create configmap grafana-dashboards \
+  --namespace springboot-graalvm \
+  --from-file=jvm-micrometer.json=provisioning/dashboards/jvm-micrometer.json \
+  --from-file=postgres-dashboard.json=provisioning/dashboards/postgres-dashboard.json \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 kubectl apply -f k8s/grafana.yaml
 
 # Wait for infrastructure to be ready
