@@ -16,7 +16,6 @@ kubectl apply -f k8s/prometheus.yaml
 kubectl create configmap grafana-dashboards \
   --namespace springboot-graalvm \
   --from-file=jvm-micrometer.json=provisioning/dashboards/jvm-micrometer.json \
-  --from-file=postgres-dashboard.json=provisioning/dashboards/postgres-dashboard.json \
   --dry-run=client -o yaml | kubectl apply -f -
 
 kubectl apply -f k8s/grafana.yaml

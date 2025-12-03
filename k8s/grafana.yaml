@@ -12,16 +12,6 @@ data:
         url: http://prometheus:9090
         access: proxy
         isDefault: true
-      - name: PostgreSQL
-        type: postgres
-        uid: postgres-datasource
-        url: postgres:5432
-        database: productdb
-        user: postgres
-        secureJsonData:
-          password: "password"
-        jsonData:
-          sslmode: "disable"
 ---
 apiVersion: v1
 kind: ConfigMap

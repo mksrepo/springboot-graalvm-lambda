@@ -24,7 +24,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,chaosmonkey
   endpoint:
     health:
       probes:
@@ -40,10 +40,12 @@ chaos:
     watcher:
       controller: true
       service: true
+      repository: true
 
     assaults:
       # How frequently chaos happens (1 = low, 3 = very high)
-      level: 3
+      # Actually, level is "requests to skip". 5 means attack every 5th request.
+      level: 5
 
       # Built-in Chaos Monkey attacks
       exceptions-active: true

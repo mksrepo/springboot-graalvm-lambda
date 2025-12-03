@@ -20,7 +20,7 @@ spec:
       containers:
       - name: springboot-graalvm-jit
         image: mrinmay939/springboot-graalvm-jit:v2.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
           name: http
@@ -40,13 +40,16 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 5
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "chaos-monkey"
         resources:
           requests:
             memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "512Mi"
+            cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
