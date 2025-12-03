@@ -20,13 +20,24 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     /**
-     * Create a new product.
+     * Create a new product or update existing one if name matches.
      * 
      * @param product the product to create
-     * @return the created product
+     * @return the created or updated product
      */
     public Product createProduct(Product product) {
-        return productRepository.save(product);
+        if (product.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price cannot be negative");
+        }
+
+        return productRepository.findByName(product.getName())
+                .map(existingProduct -> {
+                    existingProduct.setDescription(product.getDescription());
+                    existingProduct.setPrice(product.getPrice());
+                    existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
+                    return productRepository.save(existingProduct);
+                })
+                .orElseGet(() -> productRepository.save(product));
     }
 
     /**

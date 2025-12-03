@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🧹 Cleaning up Kubernetes resources..."
+echo "🧹 Full cleanup: Removing all Kubernetes resources..."
 
 # Delete all resources in the namespace
 kubectl delete namespace springboot-graalvm --ignore-not-found=true
@@ -9,4 +9,5 @@ kubectl delete namespace springboot-graalvm --ignore-not-found=true
 echo "⏳ Waiting for namespace deletion..."
 kubectl wait --for=delete namespace/springboot-graalvm --timeout=60s 2>/dev/null || true
 
-echo "✅ Cleanup complete!"
+echo "✅ Full cleanup complete!"
+echo "⚠️  All infrastructure (Prometheus, Grafana, PostgreSQL) has been removed"

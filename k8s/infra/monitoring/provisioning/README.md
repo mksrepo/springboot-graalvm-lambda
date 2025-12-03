@@ -5,7 +5,7 @@ This directory contains Grafana provisioning configurations used by Kubernetes d
 ## Structure
 
 ```
-provisioning/
+k8s/provisioning/
 ├── dashboards/          # Grafana dashboard JSON files
 │   ├── jvm-micrometer.json       # JVM metrics dashboard
 │   └── postgres-dashboard.json   # PostgreSQL database dashboard
