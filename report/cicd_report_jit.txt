@@ -1,5 +1,5 @@
 Docker Build Time:      2 seconds
 Docker Push Time:       6 seconds
 K8s Deployment Time:    15 seconds
-Pod Startup Time:       15000 ms
+Pod Startup Time:       14000 ms
 Docker Image Size:      579MB
