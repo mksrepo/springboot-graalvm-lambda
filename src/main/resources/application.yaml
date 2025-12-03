@@ -48,7 +48,7 @@ chaos:
       # Built-in Chaos Monkey attacks
       exceptions-active: true
       latency-active: true
-      killApplicationActive: false
+      killApplicationActive: true
       latency-range-start: 1000
       latency-range-end: 3000
 
