@@ -7,13 +7,15 @@ chmod +x ./scripts/cleanup.sh
 ./scripts/cleanup.sh
 
 # Start Monitoring Stack
-echo "📊 Starting Prometheus and Grafana in Kubernetes..."
+echo "📊 Starting Prometheus, Grafana, and PostgreSQL in Kubernetes..."
 kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/postgres.yaml
 kubectl apply -f k8s/prometheus.yaml
 kubectl apply -f k8s/grafana.yaml
 
-# Wait for monitoring to be ready
-echo "⏳ Waiting for monitoring stack..."
+# Wait for infrastructure to be ready
+echo "⏳ Waiting for infrastructure stack..."
+kubectl wait --for=condition=available --timeout=120s deployment/postgres -n springboot-graalvm 2>/dev/null || true
 kubectl wait --for=condition=available --timeout=60s deployment/prometheus -n springboot-graalvm 2>/dev/null || true
 kubectl wait --for=condition=available --timeout=60s deployment/grafana -n springboot-graalvm 2>/dev/null || true
 

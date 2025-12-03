@@ -1,3 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: springboot-graalvm
+data:
+  postgres-datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: PostgreSQL
+        type: postgres
+        url: postgres:5432
+        database: productdb
+        user: postgres
+        secureJsonData:
+          password: "password"
+        jsonData:
+          sslmode: "disable"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,9 +45,15 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources/postgres-datasource.yaml
+          subPath: postgres-datasource.yaml
       volumes:
       - name: grafana-storage
         emptyDir: {}
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources
 ---
 apiVersion: v1
 kind: Service
