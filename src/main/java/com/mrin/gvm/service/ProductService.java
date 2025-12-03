@@ -92,4 +92,11 @@ public class ProductService {
     public List<Product> searchProductsByName(String name) {
         return productRepository.findByNameContainingIgnoreCase(name);
     }
+
+    /**
+     * Delete all products.
+     */
+    public void deleteAllProducts() {
+        productRepository.deleteAll();
+    }
 }

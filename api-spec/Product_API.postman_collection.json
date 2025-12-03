@@ -384,6 +384,38 @@
 			]
 		},
 		{
+			"name": "Delete All Products",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/products",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"products"
+					]
+				},
+				"description": "Delete all products"
+			},
+			"response": []
+		},
+		{
 			"name": "Search Products by Name",
 			"event": [
 				{

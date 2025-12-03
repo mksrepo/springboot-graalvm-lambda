@@ -43,7 +43,7 @@ chaos:
 
     assaults:
       # How frequently chaos happens (1 = low, 3 = very high)
-      level: 2
+      level: 3
 
       # Built-in Chaos Monkey attacks
       exceptions-active: true
