@@ -6,7 +6,7 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 // Load environment variables
 export let options = {
   vus: 100,
-  duration: "1m"
+  duration: "30s"
 };
 
 export default function () {

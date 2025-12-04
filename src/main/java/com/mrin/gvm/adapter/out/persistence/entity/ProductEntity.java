@@ -1,4 +1,4 @@
-package com.mrin.gvm.model;
+package com.mrin.gvm.adapter.out.persistence.entity;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -10,14 +10,15 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 
 /**
- * Product entity representing a product in the inventory system.
- * Uses R2DBC for reactive database access.
+ * JPA/R2DBC entity for Product persistence.
+ * This is the database representation of a Product.
+ * Separated from domain model to keep domain clean.
  */
 @Table("products")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product {
+public class ProductEntity {
 
     @Id
     private Long id;

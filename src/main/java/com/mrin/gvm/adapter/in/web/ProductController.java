@@ -1,8 +1,7 @@
-package com.mrin.gvm.api;
+package com.mrin.gvm.adapter.in.web;
 
-import com.mrin.gvm.model.Product;
-import com.mrin.gvm.service.ProductService;
-import jakarta.validation.Valid;
+import com.mrin.gvm.domain.model.Product;
+import com.mrin.gvm.domain.port.in.ProductUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -10,52 +9,53 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST Controller for Product CRUD operations.
- * Provides reactive endpoints for managing products.
+ * REST Controller for Product operations.
+ * This is the inbound adapter (driving adapter) that receives HTTP requests
+ * and delegates to the ProductUseCase port.
  */
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductUseCase productUseCase;
 
     /**
      * Create a new product.
-     * 
+     *
      * @param product the product to create
      * @return mono of the created product with HTTP 201 status
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Product> createProduct(@Valid @RequestBody Product product) {
-        return productService.createProduct(product);
+    public Mono<Product> createProduct(@RequestBody Product product) {
+        return productUseCase.createProduct(product);
     }
 
     /**
      * Get all products.
-     * 
+     *
      * @return flux of all products
      */
     @GetMapping
     public Flux<Product> getAllProducts() {
-        return productService.getAllProducts();
+        return productUseCase.getAllProducts();
     }
 
     /**
      * Get a product by ID.
-     * 
+     *
      * @param id the product ID
      * @return mono of the product
      */
     @GetMapping("/{id}")
     public Mono<Product> getProductById(@PathVariable Long id) {
-        return productService.getProductById(id);
+        return productUseCase.getProductById(id);
     }
 
     /**
      * Update an existing product.
-     * 
+     *
      * @param id      the product ID
      * @param product the updated product details
      * @return mono of the updated product
@@ -63,41 +63,41 @@ public class ProductController {
     @PutMapping("/{id}")
     public Mono<Product> updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody Product product) {
-        return productService.updateProduct(id, product);
+            @RequestBody Product product) {
+        return productUseCase.updateProduct(id, product);
     }
 
     /**
      * Delete a product by ID.
-     * 
+     *
      * @param id the product ID
      * @return mono of void with HTTP 204 No Content status
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteProduct(@PathVariable Long id) {
-        return productService.deleteProduct(id);
+        return productUseCase.deleteProduct(id);
     }
 
     /**
      * Search products by name.
-     * 
+     *
      * @param name the name to search for
      * @return flux of matching products
      */
     @GetMapping("/search")
     public Flux<Product> searchProducts(@RequestParam String name) {
-        return productService.searchProductsByName(name);
+        return productUseCase.searchProductsByName(name);
     }
 
     /**
      * Delete all products.
-     * 
+     *
      * @return mono of void with HTTP 204 No Content status
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteAllProducts() {
-        return productService.deleteAllProducts();
+        return productUseCase.deleteAllProducts();
     }
 }
