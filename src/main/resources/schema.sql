@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
     price DECIMAL(10, 2) NOT NULL,
-    quantity INTEGER NOT NULL
+    quantity INTEGER NOT NULL,
+    UNIQUE(name)
 );

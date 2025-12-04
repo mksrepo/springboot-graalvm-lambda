@@ -28,14 +28,25 @@ public class ProductService {
             return Mono.error(new IllegalArgumentException("Price cannot be negative"));
         }
 
-        return productRepository.findByName(product.getName())
-                .flatMap(existingProduct -> {
-                    existingProduct.setDescription(product.getDescription());
-                    existingProduct.setPrice(product.getPrice());
-                    existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
-                    return productRepository.save(existingProduct);
-                })
-                .switchIfEmpty(productRepository.save(product));
+        return productRepository.save(product)
+                .onErrorResume(error -> {
+                    // Handle duplicate key violation (race condition)
+                    // When concurrent requests try to insert the same product name
+                    if (error.getMessage() != null &&
+                            (error.getMessage().contains("duplicate key") ||
+                                    error.getMessage().contains("unique constraint"))) {
+                        // Retry by fetching and updating the existing product
+                        return productRepository.findByName(product.getName())
+                                .flatMap(existingProduct -> {
+                                    existingProduct.setDescription(product.getDescription());
+                                    existingProduct.setPrice(product.getPrice());
+                                    existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
+                                    return productRepository.save(existingProduct);
+                                });
+                    }
+                    // For other errors, propagate them
+                    return Mono.error(error);
+                });
     }
 
     /**

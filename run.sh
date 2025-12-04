@@ -51,11 +51,9 @@ chmod +x ./scripts/reporting/get_startup_time.sh
 echo "🔐 Logging into Docker Hub..."
 docker login
 
-# Run AOT and JIT deployments in parallel for faster execution
+# Run AOT and JIT deployments sequentially to avoid database contention
 echo ""
-echo "🚀 Starting parallel builds..."
-echo "  ⚡ AOT build running in background..."
-echo "  ⚡ JIT build running in background..."
+echo "🚀 Starting sequential builds to avoid database contention..."
 
 CHAOS_FLAG=""
 if [[ "$1" == "--chaos" ]]; then
@@ -63,17 +61,12 @@ if [[ "$1" == "--chaos" ]]; then
     echo "🔥 Chaos Monkey Mode Enabled!"
 fi
 
-./scripts/build/gvm.aot.sh $CHAOS_FLAG &
-AOT_PID=$!
-
-./scripts/build/gvm.jit.sh $CHAOS_FLAG &
-JIT_PID=$!
-
-# Wait for both builds to complete
-echo "⏳ Waiting for both AOT and JIT builds to complete..."
-wait $AOT_PID
+echo "  ⚡ Building and testing AOT first..."
+./scripts/build/gvm.aot.sh $CHAOS_FLAG
 AOT_EXIT=$?
-wait $JIT_PID
+
+echo "  ⚡ Building and testing JIT second..."
+./scripts/build/gvm.jit.sh $CHAOS_FLAG
 JIT_EXIT=$?
 
 # Check if both builds succeeded

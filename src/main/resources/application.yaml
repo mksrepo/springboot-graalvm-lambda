@@ -8,9 +8,11 @@ spring:
     username: postgres
     password: password
     pool:
-      initial-size: 10
-      max-size: 20
+      initial-size: 20
+      max-size: 50
       max-idle-time: 30m
+      max-acquire-time: 10s
+      max-create-connection-time: 5s
       validation-query: SELECT 1
   
 # Data Initialization (R2DBC)
@@ -33,7 +35,25 @@ management:
     tags:
       env: production
 
-# Chaos Monkey Configuration (Disabled by default, enable via 'chaos' profile)
+# Chaos Monkey Configuration (Controlled via CHAOS_MONKEY_ENABLED env var)
 chaos:
   monkey:
-    enabled: false
+    enabled: ${CHAOS_MONKEY_ENABLED:false}
+    watcher:
+      rest-controller: true
+      service: true
+      repository: true
+      component: true
+    assaults:
+      level: 3
+      exceptions-active: true
+      latency-active: true
+      kill-application-active: true
+      memory-active: true
+      latency-range-start: 1000
+      latency-range-end: 3000
+      kill-application-cron-expression: "*/30 * * * * ?"
+      memory-milliseconds-hold-filled-memory: 5000
+      memory-milliseconds-wait-next-increase: 1000
+      memory-fill-increment-fraction: 0.15
+      memory-fill-target-fraction: 0.25
