@@ -4,17 +4,15 @@ import com.mrin.gvm.model.Product;
 import com.mrin.gvm.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Service class for managing Product operations.
- * Contains business logic for CRUD operations.
+ * Contains business logic for reactive CRUD operations.
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -23,30 +21,29 @@ public class ProductService {
      * Create a new product or update existing one if name matches.
      * 
      * @param product the product to create
-     * @return the created or updated product
+     * @return mono of the created or updated product
      */
-    public Product createProduct(Product product) {
+    public Mono<Product> createProduct(Product product) {
         if (product.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Price cannot be negative");
+            return Mono.error(new IllegalArgumentException("Price cannot be negative"));
         }
 
         return productRepository.findByName(product.getName())
-                .map(existingProduct -> {
+                .flatMap(existingProduct -> {
                     existingProduct.setDescription(product.getDescription());
                     existingProduct.setPrice(product.getPrice());
                     existingProduct.setQuantity(existingProduct.getQuantity() + product.getQuantity());
                     return productRepository.save(existingProduct);
                 })
-                .orElseGet(() -> productRepository.save(product));
+                .switchIfEmpty(productRepository.save(product));
     }
 
     /**
      * Get all products.
      * 
-     * @return list of all products
+     * @return flux of all products
      */
-    @Transactional(readOnly = true)
-    public List<Product> getAllProducts() {
+    public Flux<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
@@ -54,13 +51,11 @@ public class ProductService {
      * Get a product by ID.
      * 
      * @param id the product ID
-     * @return the product
-     * @throws RuntimeException if product not found
+     * @return mono of the product
      */
-    @Transactional(readOnly = true)
-    public Product getProductById(Long id) {
+    public Mono<Product> getProductById(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .switchIfEmpty(Mono.error(new RuntimeException("Product not found with id: " + id)));
     }
 
     /**
@@ -68,46 +63,46 @@ public class ProductService {
      * 
      * @param id             the product ID
      * @param productDetails the updated product details
-     * @return the updated product
-     * @throws RuntimeException if product not found
+     * @return mono of the updated product
      */
-    public Product updateProduct(Long id, Product productDetails) {
-        Product product = getProductById(id);
-
-        product.setName(productDetails.getName());
-        product.setDescription(productDetails.getDescription());
-        product.setPrice(productDetails.getPrice());
-        product.setQuantity(productDetails.getQuantity());
-
-        return productRepository.save(product);
+    public Mono<Product> updateProduct(Long id, Product productDetails) {
+        return getProductById(id)
+                .flatMap(product -> {
+                    product.setName(productDetails.getName());
+                    product.setDescription(productDetails.getDescription());
+                    product.setPrice(productDetails.getPrice());
+                    product.setQuantity(productDetails.getQuantity());
+                    return productRepository.save(product);
+                });
     }
 
     /**
      * Delete a product by ID.
      * 
      * @param id the product ID
-     * @throws RuntimeException if product not found
+     * @return mono of void
      */
-    public void deleteProduct(Long id) {
-        Product product = getProductById(id);
-        productRepository.delete(product);
+    public Mono<Void> deleteProduct(Long id) {
+        return getProductById(id)
+                .flatMap(productRepository::delete);
     }
 
     /**
      * Search products by name.
      * 
      * @param name the name to search for
-     * @return list of matching products
+     * @return flux of matching products
      */
-    @Transactional(readOnly = true)
-    public List<Product> searchProductsByName(String name) {
+    public Flux<Product> searchProductsByName(String name) {
         return productRepository.findByNameContainingIgnoreCase(name);
     }
 
     /**
      * Delete all products.
+     * 
+     * @return mono of void
      */
-    public void deleteAllProducts() {
-        productRepository.deleteAll();
+    public Mono<Void> deleteAllProducts() {
+        return productRepository.deleteAll();
     }
 }

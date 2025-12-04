@@ -57,10 +57,16 @@ echo "🚀 Starting parallel builds..."
 echo "  ⚡ AOT build running in background..."
 echo "  ⚡ JIT build running in background..."
 
-./scripts/build/gvm.aot.sh &
+CHAOS_FLAG=""
+if [[ "$1" == "--chaos" ]]; then
+    CHAOS_FLAG="--chaos"
+    echo "🔥 Chaos Monkey Mode Enabled!"
+fi
+
+./scripts/build/gvm.aot.sh $CHAOS_FLAG &
 AOT_PID=$!
 
-./scripts/build/gvm.jit.sh &
+./scripts/build/gvm.jit.sh $CHAOS_FLAG &
 JIT_PID=$!
 
 # Wait for both builds to complete

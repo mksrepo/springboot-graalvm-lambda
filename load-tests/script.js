@@ -6,8 +6,7 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 // Load environment variables
 export let options = {
   vus: 100,
-  duration: "30s",
-  gracefulStop: "5s", // Limit graceful shutdown to 5s (default is 30s)
+  duration: "10s"
 };
 
 export default function () {

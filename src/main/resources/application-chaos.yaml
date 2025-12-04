@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: chaos
+
+management:
+  metrics:
+    tags:
+      env: chaos
+
+chaos:
+  monkey:
+    enabled: true
+    watcher:
+      controller: true
+      service: true
+      repository: true
+
+    assaults:
+      # How frequently chaos happens (1 = low, 3 = very high)
+      # Actually, level is "requests to skip". 5 means attack every 5th request.
+      level: 5
+
+      # Built-in Chaos Monkey attacks
+      exceptions-active: true
+      latency-active: true
+      killApplicationActive: true
+      latency-range-start: 1000
+      latency-range-end: 3000
+
+      # Register custom assaults by bean names
+      custom-assaults:
+        - cpuBurnAssault
+        - memoryBurnAssault

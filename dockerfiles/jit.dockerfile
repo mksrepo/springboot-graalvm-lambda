@@ -9,7 +9,7 @@ RUN mvn dependency:go-offline -B
 
 # Copy source and build
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -Dmaven.test.skip=true
 
 # Extract layers
 RUN java -Djarmode=layertools -jar target/*.jar extract
