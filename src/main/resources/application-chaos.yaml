@@ -4,6 +4,10 @@ spring:
       on-profile: chaos
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,chaosmonkey
   metrics:
     tags:
       env: chaos

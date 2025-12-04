@@ -55,10 +55,15 @@ docker login
 echo ""
 echo "🚀 Starting sequential builds to avoid database contention..."
 
+# Ensure deploy script is executable
+chmod +x ./k8s/deploy.sh
+
 CHAOS_FLAG=""
 if [[ "$1" == "--chaos" ]]; then
     CHAOS_FLAG="--chaos"
-    echo "🔥 Chaos Monkey Mode Enabled!"
+    echo "🔥 Chaos Monkey Mode Enabled! (AOT & JIT)"
+else
+    echo "✅ Standard Mode Enabled (No Chaos)"
 fi
 
 echo "  ⚡ Building and testing AOT first..."

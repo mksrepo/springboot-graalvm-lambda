@@ -23,18 +23,13 @@ fi
 echo "Deploying $APP_TYPE..."
 
 if [[ "$CHAOS_FLAG" == "--chaos" ]]; then
-  if [[ "$APP_TYPE" == "jit" ]]; then
-    echo "🔥 Enabling Chaos Monkey profile for JIT..."
-    # Use sed to replace production with chaos and enable CHAOS_MONKEY_ENABLED
-    # We replace 'value: "production"' with 'value: "chaos"'
-    # And 'value: "false"' with 'value: "true"' specifically for CHAOS_MONKEY_ENABLED
-    sed -e 's/value: "production"/value: "chaos"/' \
-        -e '/name: CHAOS_MONKEY_ENABLED/{n;s/value: "false"/value: "true"/;}' \
-        "$DEPLOYMENT_FILE" | kubectl apply -f -
-  else
-    echo "🛡️ Keeping AOT in production mode (Chaos Monkey disabled for AOT)..."
-    kubectl apply -f "$DEPLOYMENT_FILE"
-  fi
+  echo "🔥 Enabling Chaos Monkey profile..."
+  # Use sed to replace production with chaos and enable CHAOS_MONKEY_ENABLED
+  # We replace 'value: "production"' with 'value: "chaos"'
+  # And 'value: "false"' with 'value: "true"' specifically for CHAOS_MONKEY_ENABLED
+  sed -e 's/value: "production"/value: "chaos"/' \
+      -e '/name: CHAOS_MONKEY_ENABLED/{n;s/value: "false"/value: "true"/;}' \
+      "$DEPLOYMENT_FILE" | kubectl apply -f -
 else
   echo "Deploying with default (production) profile..."
   kubectl apply -f "$DEPLOYMENT_FILE"

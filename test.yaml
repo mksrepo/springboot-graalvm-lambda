@@ -1,0 +1,4 @@
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: CHAOS_MONKEY_ENABLED
+          value: "false"

@@ -1,9 +1,11 @@
 package com.mrin.gvm.chaos;
 
 import de.codecentric.spring.boot.chaos.monkey.assaults.ChaosMonkeyAssault;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component("cpuBurnAssault")
+@Profile("chaos")
 public class CpuBurnAssault implements ChaosMonkeyAssault {
 
     @Override
