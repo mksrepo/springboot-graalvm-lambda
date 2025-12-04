@@ -1,38 +1,57 @@
-# Performance Comparison: AOT vs JIT
+# 📊 Performance Comparison: AOT vs JIT
 
-## Overview
-This report compares the performance of the AOT (Ahead-of-Time, GraalVM Native Image) and JIT (Just-in-Time, JVM) versions of the application based on the latest k6 load test results.
+## 📋 Overview
+This report compares the performance of the **AOT** (Ahead-of-Time, GraalVM Native Image) and **JIT** (Just-in-Time, JVM) versions of the application based on the latest k6 load test results.
 
-## Metrics Comparison
+---
 
-| Metric | AOT (GraalVM Native Image) | JIT (JVM) |
-| :--- | :--- | :--- |
-| **Total Requests (Iterations)** | 6566 | 2114 |
-| **Throughput (reqs/sec)** | 218.01591/s | 70.163646/s |
-| **Avg Response Time** | 45.66ms | 142.15ms |
-| **p95 Response Time** | p(90)=102.4ms | p(90)=204.37ms |
-| **Data Received** | 528 MB | 55 MB |
-| **Docker Build Time** |      2 seconds |      1 seconds |
-| **Docker Image Size** |      337MB |      564MB |
-| **Docker Push Time** |       7 seconds |       7 seconds |
-| **K8s Deployment Time** |    17 seconds |    24 seconds |
-| **Pod Startup Time** | 6000 ms | 12000 ms |
+## 🎯 Metrics Comparison
 
-## Vulnerability Comparison
+| Metric | AOT (GraalVM Native Image) | JIT (JVM) | Winner | Improvement |
+| :--- | :--- | :--- | :--- | :--- |
+| **🚀 Total Requests** | 11822 | 449 | 🏆 AOT | ⬆️ +2533.0% |
+| **⚡ Throughput** | 384.943267/s | 9.541213/s | 🏆 AOT | ⬆️ +3934.5% |
+| **⏱️ Avg Response Time** | 139ms | 8.44s | 🏆 AOT | ⬇️ -98.4% |
+| **📈 p95 Response Time** | 300.05ms | 19.04s | 🏆 AOT | ⬇️ -98.4% |
+| **❌ Failure Count** | 22 | 154 | 🏆 AOT | ⬇️ -85.7% |
+| **📦 Data Received** | 406 MB | 12 MB | 🏆 AOT | ⬆️ +3283.3% |
+| **🔨 Docker Build Time** |      3 seconds |      2 seconds | 🥈 JIT | ⬇️ -33.3% |
+| **💾 Docker Image Size** |      347MB |      576MB | 🏆 AOT | ⬇️ -39.8% |
+| **📤 Docker Push Time** |       10 seconds |       8 seconds | 🥈 JIT | ⬇️ -20.0% |
+| **☸️ K8s Deployment Time** |    33 seconds |    33 seconds | 🤝 Tie | ➡️ 0.0% |
+| **🚦 Pod Startup Time** | 32000 ms | 33000 ms | 🏆 AOT | ⬇️ -3.0% |
 
-| Metric | AOT (GraalVM Native Image) | JIT (JVM) |
-| :--- | :--- | :--- |
-| **Base Image** | debian:12-slim | amazoncorretto:17-alpine |
-| **Total Packages** | 126 | 98 (-28) |
-| **Vulnerabilities** | 0C     0H     1M    24L | 0C     0H     0M     2L |
+---
 
-**Note**: The AOT image uses `debian:12-slim` which has significantly fewer packages and vulnerabilities compared to the `amazoncorretto:17-alpine` base used for JIT.
+## 🔑 Key Findings
 
-## Key Findings
+### 🏆 Performance Metrics
+1. **⚡ Throughput**: AOT achieved **384.943267/s** vs JIT **9.541213/s**
+   - Winner: **AOT** with **+3934.5%** improvement
 
-1.  **Throughput**: AOT achieved **218.01591/s** vs JIT **70.163646/s**.
-2.  **Latency**: AOT Avg Latency **45.66ms** vs JIT **142.15ms**.
-3.  **Image Size**: AOT Image is **     337MB** vs JIT **     564MB**.
-4.  **Startup Time**: AOT started in **6000 ms** vs JIT **12000 ms**.
+2. **⏱️ Latency**: AOT Avg Latency **139ms** vs JIT **8.44s**
+   - Winner: **AOT** with **-98.4%** improvement
 
-*Generated automatically by sh/generate_report.sh*
+3. **✅ Reliability**: AOT had **22** failures vs JIT **154** failures
+   - Winner: **AOT** with **-85.7%** improvement
+
+### 📦 Deployment Metrics
+4. **💾 Image Size**: AOT **     347MB** vs JIT **     576MB**
+   - Winner: **AOT** with **-39.8%** improvement
+
+5. **🚦 Startup Time**: AOT **32000 ms** vs JIT **33000 ms**
+   - Winner: **AOT** with **-3.0%** improvement
+
+---
+
+## 📌 Legend
+- 🏆 = Winner (Best Performance)
+- 🥈 = Second Place
+- 🤝 = Tie (Equal Performance)
+- ⬆️ = Higher is better (increase)
+- ⬇️ = Lower is better (decrease)
+- ➡️ = No change
+
+---
+
+*🤖 Generated automatically by scripts/reporting/generate_report.sh*

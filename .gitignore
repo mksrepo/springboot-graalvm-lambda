@@ -35,8 +35,10 @@ build/
 ### macOS ###
 .DS_Store
 
+report/aot_vs_jit.md
 report/cicd_report_aot.txt
 report/cicd_report_jit.txt
 report/k6_report_aot.txt
 report/k6_report_jit.txt
-report/vulnerability_report.md
+report/startup_time_aot.txt
+report/startup_time_jit.txt

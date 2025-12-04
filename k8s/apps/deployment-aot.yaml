@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-graalvm-aot
+  namespace: springboot-graalvm
+  labels:
+    app: springboot-graalvm-aot
+    version: v2.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springboot-graalvm-aot
+  template:
+    metadata:
+      labels:
+        app: springboot-graalvm-aot
+        version: v2.0
+    spec:
+      containers:
+      - name: springboot-graalvm-aot
+        image: mrinmay939/springboot-graalvm-aot:v2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "chaos-monkey"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-graalvm-aot
+  namespace: springboot-graalvm
+  labels:
+    app: springboot-graalvm-aot
+spec:
+  type: NodePort
+  selector:
+    app: springboot-graalvm-aot
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30001
+    protocol: TCP
+    name: http

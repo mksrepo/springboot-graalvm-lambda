@@ -20,4 +20,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @return list of matching products
      */
     List<Product> findByNameContainingIgnoreCase(String name);
+
+    /**
+     * Find product by exact name.
+     * 
+     * @param name the name to search for
+     * @return the product if found
+     */
+    java.util.Optional<Product> findByName(String name);
 }

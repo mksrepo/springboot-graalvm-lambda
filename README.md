@@ -5,7 +5,52 @@ This repository demonstrates a simple Spring Boot REST service built and deploye
 - **AOT** – GraalVM native image (ahead‑of‑time compilation)
 - **JIT** – Traditional JVM execution
 
-Both variants are containerised, pushed to Docker Hub, deployed to a local Kubernetes cluster, and load‑tested with **k6**. A CI/CD‑style script captures build, push, deployment, and application start times (in milliseconds) and generates a markdown performance comparison report.
+## Running the Complete Pipeline
+The `run.sh` script orchestrates the entire deployment and testing process:
+
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+**Smart Infrastructure Management:**
+- **First run**: Sets up complete infrastructure (Prometheus, Grafana, PostgreSQL)
+- **Subsequent runs**: Preserves infrastructure, only redeploys applications
+- **Time saved**: ~90-120 seconds per run after first deployment!
+
+## Cleaning Up
+
+### Quick Cleanup (Recommended for Development)
+Removes only application deployments, preserves infrastructure:
+```bash
+./k8s/cleanup.sh
+# or
+./k8s/cleanup-apps.sh
+```
+
+**Benefits:**
+- ⚡ Fast (~5-10 seconds)
+- 📊 Preserves monitoring data
+- 🗄️ Preserves database
+- Perfect for iterative testing
+
+### Full Cleanup (Complete Teardown)
+Removes everything including infrastructure:
+```bash
+./k8s/cleanup-full.sh
+```
+
+**When to use:**
+- End of testing session
+- Freeing up cluster resources
+- Starting fresh
+
+### Manual Cleanup
+```bash
+# Remove Docker images locally
+docker rmi ${DOCKERHUB_USER}/springboot-graalvm-aot:${TAG}
+docker rmi ${DOCKERHUB_USER}/springboot-graalvm-jit:${TAG}
+```
 
 ## Prerequisites
 - macOS (or Linux) with **Docker Desktop** (including Kubernetes) installed
@@ -17,21 +62,43 @@ Both variants are containerised, pushed to Docker Hub, deployed to a local Kuber
 
 ## Project Structure
 ```
-├── src/main/java/com/mrin/gvm/api/GreetingController.java   # simple "Hello" endpoint
-├── pom.xml                                                # Maven build, native plugin
-├── sh/gvm.aot.sh                                         # AOT build, push, deploy, report
-├── sh/gvm.jit.sh                                         # JIT build, push, deploy, report
-├── sh/generate_report.sh                                 # Generates aot_vs_jit.md
-├── k6/script.js                                          # k6 load test (10 VUs, 5 s)
-├── report/                                               # CI/CD metrics & comparison report
-└── k8s/                                                 # Deployment & Service yaml files
+├── pom.xml                             # Maven build configuration
+├── src/                                # Spring Boot source code
+├── run.sh                              # Main deployment script
+├── dockerfiles/                        # Docker build files
+│   ├── aot.dockerfile                  # GraalVM native image build
+│   └── jit.dockerfile                  # Standard JVM build
+├── k8s/                                # Kubernetes manifests
+│   ├── apps/                           # Application deployments
+│   │   ├── deployment-aot.yaml         # AOT deployment
+│   │   └── deployment-jit.yaml         # JIT deployment
+│   └── infra/                          # Infrastructure components
+│       ├── namespace.yaml              # Namespace definition
+│       ├── database/                   # Database configurations
+│       │   └── postgres.yaml           # PostgreSQL database
+│       └── monitoring/                 # Observability stack
+│           ├── prometheus.yaml         # Prometheus monitoring
+│           ├── grafana.yaml            # Grafana dashboards
+│           └── provisioning/           # Grafana provisioning files
+│               ├── dashboards/         # Dashboard JSON files
+│               └── datasources/        # Datasource configurations
+├── scripts/                            # Build and deployment scripts
+│   ├── build/                          # Build and deployment pipelines
+│   │   ├── gvm.aot.sh                  # AOT build pipeline
+│   │   └── gvm.jit.sh                  # JIT build pipeline
+│   └── reporting/                      # Performance reporting
+│       ├── generate_report.sh          # Performance report generator
+│       └── get_startup_time.sh         # Startup time calculator
+├── load-tests/                         # K6 load testing scripts
+│   └── script.js                       # Load test configuration
+└── report/                             # Generated reports and metrics
 ```
 
 ## Building & Deploying
 ### AOT (Native Image)
 ```bash
-chmod +x sh/gvm.aot.sh
-./sh/gvm.aot.sh
+chmod +x scripts/build/gvm.aot.sh
+./scripts/build/gvm.aot.sh
 ```
 The script will:
 1. Build the native image Docker image.
@@ -42,15 +109,15 @@ The script will:
 
 ### JIT (JVM)
 ```bash
-chmod +x sh/gvm.jit.sh
-./sh/gvm.jit.sh
+chmod +x scripts/build/gvm.jit.sh
+./scripts/build/gvm.jit.sh
 ```
 Same steps as AOT but using the standard JVM image.
 
 ## Load Testing with k6
 Both scripts invoke k6 after deployment:
 ```bash
-k6 run ./k6/script.js --address localhost:6565 \
+k6 run ./load-tests/script.js --address localhost:6565 \
     --env URL=http://localhost:30001/hello --env TYPE=aot
 ```
 and similarly for JIT (port 6566, URL 30002). Results are stored in `report/k6_report_aot.txt` and `report/k6_report_jit.txt`.
@@ -58,8 +125,8 @@ and similarly for JIT (port 6566, URL 30002). Results are stored in `report/
 ## Generating the Performance Comparison Report
 After both builds have completed, run:
 ```bash
-chmod +x sh/generate_report.sh
-./sh/generate_report.sh
+chmod +x scripts/reporting/generate_report.sh
+./scripts/reporting/generate_report.sh
 ```
 The script reads the k6 and CI/CD metric files and creates `report/aot_vs_jit.md` containing a side‑by‑side table of:
 - Total requests, throughput, latency
@@ -81,9 +148,8 @@ These values are automatically pulled into the markdown report.
 
 ## Cleaning Up
 ```bash
-# Delete deployments and services
-kubectl delete -f k8s/deployment_aot.yaml k8s/service_aot.yaml
-kubectl delete -f k8s/deployment_jit.yaml k8s/service_jit.yaml
+# Cleanup all resources
+./k8s/cleanup.sh
 
 # Remove Docker images locally
 docker rmi ${DOCKERHUB_USER}/springboot-graalvm-aot:${TAG}

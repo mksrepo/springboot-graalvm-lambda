@@ -94,4 +94,15 @@ public class ProductController {
         List<Product> products = productService.searchProductsByName(name);
         return ResponseEntity.ok(products);
     }
+
+    /**
+     * Delete all products.
+     * 
+     * @return HTTP 204 No Content status
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllProducts() {
+        productService.deleteAllProducts();
+        return ResponseEntity.noContent().build();
+    }
 }

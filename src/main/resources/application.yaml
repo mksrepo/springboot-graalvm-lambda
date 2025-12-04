@@ -1,23 +1,60 @@
 spring:
   application:
     name: springboot-graalvm-lambda
-  
+
+# DataSource Configuration
   datasource:
-    url: jdbc:h2:mem:productdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    url: jdbc:postgresql://postgres:5432/productdb
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
   
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  
+# JPA Configuration
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,chaosmonkey
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      env: production
+
+# Chaos Monkey Configuration
+chaos:
+  monkey:
+    enabled: true
+    watcher:
+      controller: true
+      service: true
+      repository: true
+
+    assaults:
+      # How frequently chaos happens (1 = low, 3 = very high)
+      # Actually, level is "requests to skip". 5 means attack every 5th request.
+      level: 5
+
+      # Built-in Chaos Monkey attacks
+      exceptions-active: true
+      latency-active: true
+      killApplicationActive: true
+      latency-range-start: 1000
+      latency-range-end: 3000
+
+      # Register custom assaults by bean names
+      custom-assaults:
+        - cpuBurnAssault
+        - memoryBurnAssault

@@ -6,15 +6,15 @@ FROM ghcr.io/graalvm/native-image-community:25 AS build
 WORKDIR /workspace
 
 # Copy minimal files first for better caching
-COPY ../pom.xml mvnw ./
-COPY ../.mvn .mvn
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
 
 # Warm up Maven dependencies
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -q dependency:go-offline
 
 # Copy application source
-COPY ../src src
+COPY src src
 
 # Build Spring Boot Native binary
 RUN --mount=type=cache,target=/root/.m2 \
@@ -32,6 +32,7 @@ FROM debian:bookworm-slim AS final
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     zlib1g \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
