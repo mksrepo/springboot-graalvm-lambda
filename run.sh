@@ -47,11 +47,41 @@ chmod +x ./scripts/build/gvm.aot.sh
 chmod +x ./scripts/build/gvm.jit.sh
 chmod +x ./scripts/reporting/get_startup_time.sh
 
-# Run AOT and JIT deployments sequentially
-./scripts/build/gvm.aot.sh
-./scripts/build/gvm.jit.sh
+# Docker login once before parallel builds (avoids TTY issues)
+echo "🔐 Logging into Docker Hub..."
+docker login
 
-wait
+# Run AOT and JIT deployments in parallel for faster execution
+echo ""
+echo "🚀 Starting parallel builds..."
+echo "  ⚡ AOT build running in background..."
+echo "  ⚡ JIT build running in background..."
+
+./scripts/build/gvm.aot.sh &
+AOT_PID=$!
+
+./scripts/build/gvm.jit.sh &
+JIT_PID=$!
+
+# Wait for both builds to complete
+echo "⏳ Waiting for both AOT and JIT builds to complete..."
+wait $AOT_PID
+AOT_EXIT=$?
+wait $JIT_PID
+JIT_EXIT=$?
+
+# Check if both builds succeeded
+if [ $AOT_EXIT -ne 0 ]; then
+    echo "❌ AOT build failed with exit code $AOT_EXIT"
+    exit 1
+fi
+
+if [ $JIT_EXIT -ne 0 ]; then
+    echo "❌ JIT build failed with exit code $JIT_EXIT"
+    exit 1
+fi
+
+echo "✅ Both AOT and JIT builds completed successfully!"
 
 # Generate performance report
 chmod +x ./scripts/reporting/generate_report.sh
