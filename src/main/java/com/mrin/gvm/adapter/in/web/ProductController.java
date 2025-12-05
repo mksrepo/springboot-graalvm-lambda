@@ -1,107 +1,120 @@
 package com.mrin.gvm.adapter.in.web;
 
+import com.mrin.gvm.application.interceptor.AuditInterceptor;
 import com.mrin.gvm.domain.model.Product;
 import com.mrin.gvm.domain.port.in.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST Controller for Product operations.
- * This is the inbound adapter (driving adapter) that receives HTTP requests
- * and delegates to the ProductService port.
+ * REST Controller for managing Products.
+ * <p>
+ * This adapter serves as the entry point for product-related operations,
+ * handling HTTP requests and delegating to the {@link ProductService}.
+ * It also integrates with the {@link AuditInterceptor} for operation auditing.
+ * </p>
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productUseCase;
-    private final com.mrin.gvm.application.interceptor.AuditInterceptor auditInterceptor;
+    private final ProductService productService;
+    private final AuditInterceptor auditInterceptor;
 
     /**
-     * Create a new product.
+     * Creates a new product.
      *
-     * @param product the product to create
-     * @return mono of the created product with HTTP 201 status
+     * @param product the product details to create
+     * @return a Mono containing the created {@link Product}
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Product> createProduct(@RequestBody Product product) {
+        log.info("Request to create product: {}", product.getName());
         return auditInterceptor.auditOperation(
-                productUseCase.createProduct(product),
+                productService.createProduct(product),
                 "CREATE",
                 product);
     }
 
     /**
-     * Get all products.
+     * Retrieves all products.
      *
-     * @return flux of all products
+     * @return a Flux of all {@link Product}s
      */
     @GetMapping
     public Flux<Product> getAllProducts() {
-        return productUseCase.getAllProducts();
+        return productService.getAllProducts();
     }
 
     /**
-     * Get a product by ID.
+     * Retrieves a single product by its ID.
      *
-     * @param id the product ID
-     * @return mono of the product
+     * @param id the ID of the product
+     * @return a Mono containing the {@link Product}, or empty if not found
      */
     @GetMapping("/{id}")
     public Mono<Product> getProductById(@PathVariable Long id) {
-        return productUseCase.getProductById(id);
+        return productService.getProductById(id);
     }
 
     /**
-     * Update an existing product.
+     * Updates an existing product.
      *
-     * @param id      the product ID
-     * @param product the updated product details
-     * @return mono of the updated product
+     * @param id      the ID of the product to update
+     * @param product the new product details
+     * @return a Mono containing the updated {@link Product}
      */
     @PutMapping("/{id}")
     public Mono<Product> updateProduct(
             @PathVariable Long id,
             @RequestBody Product product) {
-        return productUseCase.updateProduct(id, product);
+        log.info("Request to update product id: {}", id);
+        return productService.updateProduct(id, product);
     }
 
     /**
-     * Delete a product by ID.
+     * Deletes a product by its ID.
      *
-     * @param id the product ID
-     * @return mono of void with HTTP 204 No Content status
+     * @param id the ID of the product to delete
+     * @return a Mono that completes when deletion is finished
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteProduct(@PathVariable Long id) {
-        return productUseCase.deleteProduct(id);
+        log.info("Request to delete product id: {}", id);
+        return productService.deleteProduct(id);
     }
 
     /**
-     * Search products by name.
+     * Searches for products by name.
      *
-     * @param name the name to search for
-     * @return flux of matching products
+     * @param name the name (or partial name) to search for
+     * @return a Flux of matching {@link Product}s
      */
     @GetMapping("/search")
     public Flux<Product> searchProducts(@RequestParam String name) {
-        return productUseCase.searchProductsByName(name);
+        return productService.searchProductsByName(name);
     }
 
     /**
-     * Delete all products.
+     * Deletes all products.
+     * <p>
+     * <b>Warning:</b> This removes all product data.
+     * </p>
      *
-     * @return mono of void with HTTP 204 No Content status
+     * @return a Mono that completes when deletion is finished
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteAllProducts() {
-        return productUseCase.deleteAllProducts();
+        log.warn("Request to delete ALL products");
+        return productService.deleteAllProducts();
     }
 }

@@ -21,6 +21,11 @@ public class KafkaAuditEventConsumer {
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Consumes audit events from the Kafka topic and saves them to the repository.
+     *
+     * @param event the {@link AuditEvent} received from Kafka
+     */
     @KafkaListener(topics = "product.audit.events", groupId = "audit-logger")
     public void consumeAuditEvent(AuditEvent event) {
         try {
