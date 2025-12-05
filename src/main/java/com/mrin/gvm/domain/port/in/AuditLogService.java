@@ -14,7 +14,7 @@ import java.util.Map;
  * 
  * Implementations will be in the domain/application layer.
  */
-public interface AuditLogUseCase {
+public interface AuditLogService {
 
     /**
      * Get audit logs with optional filters

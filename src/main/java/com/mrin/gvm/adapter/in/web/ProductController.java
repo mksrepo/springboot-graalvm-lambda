@@ -1,7 +1,7 @@
 package com.mrin.gvm.adapter.in.web;
 
 import com.mrin.gvm.domain.model.Product;
-import com.mrin.gvm.domain.port.in.ProductUseCase;
+import com.mrin.gvm.domain.port.in.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -11,14 +11,14 @@ import reactor.core.publisher.Mono;
 /**
  * REST Controller for Product operations.
  * This is the inbound adapter (driving adapter) that receives HTTP requests
- * and delegates to the ProductUseCase port.
+ * and delegates to the ProductService port.
  */
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductUseCase productUseCase;
+    private final ProductService productUseCase;
     private final com.mrin.gvm.application.interceptor.AuditInterceptor auditInterceptor;
 
     /**

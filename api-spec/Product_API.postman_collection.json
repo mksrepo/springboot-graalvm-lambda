@@ -56,46 +56,7 @@
 				},
 				"description": "Create a new product with name, description, price, and quantity"
 			},
-			"response": [
-				{
-					"name": "Create Product - Success",
-					"originalRequest": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Laptop\",\n  \"description\": \"High-performance laptop\",\n  \"price\": 1299.99,\n  \"quantity\": 5\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8080/api/products",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products"
-							]
-						}
-					},
-					"status": "Created",
-					"code": 201,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"body": "{\n  \"id\": 1,\n  \"name\": \"Laptop\",\n  \"description\": \"High-performance laptop\",\n  \"price\": 1299.99,\n  \"quantity\": 5\n}"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Get All Products",
@@ -132,37 +93,7 @@
 				},
 				"description": "Retrieve all products from the database"
 			},
-			"response": [
-				{
-					"name": "Get All Products - Success",
-					"originalRequest": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Laptop\",\n    \"description\": \"High-performance laptop\",\n    \"price\": 1299.99,\n    \"quantity\": 5\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Mouse\",\n    \"description\": \"Wireless gaming mouse\",\n    \"price\": 49.99,\n    \"quantity\": 20\n  }\n]"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Get Product by ID",
@@ -204,38 +135,7 @@
 				},
 				"description": "Retrieve a specific product by its ID"
 			},
-			"response": [
-				{
-					"name": "Get Product by ID - Success",
-					"originalRequest": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"1"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"body": "{\n  \"id\": 1,\n  \"name\": \"Laptop\",\n  \"description\": \"High-performance laptop\",\n  \"price\": 1299.99,\n  \"quantity\": 5\n}"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Update Product",
@@ -282,47 +182,7 @@
 				},
 				"description": "Update an existing product by ID"
 			},
-			"response": [
-				{
-					"name": "Update Product - Success",
-					"originalRequest": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Gaming Laptop\",\n  \"description\": \"Ultra high-performance gaming laptop\",\n  \"price\": 1599.99,\n  \"quantity\": 3\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8080/api/products/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"1"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"body": "{\n  \"id\": 1,\n  \"name\": \"Gaming Laptop\",\n  \"description\": \"Ultra high-performance gaming laptop\",\n  \"price\": 1599.99,\n  \"quantity\": 3\n}"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Delete Product",
@@ -355,33 +215,7 @@
 				},
 				"description": "Delete a product by ID"
 			},
-			"response": [
-				{
-					"name": "Delete Product - Success",
-					"originalRequest": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products/2",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"2"
-							]
-						}
-					},
-					"status": "No Content",
-					"code": 204,
-					"_postman_previewlanguage": null,
-					"header": [],
-					"body": null
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Delete All Products",
@@ -457,44 +291,7 @@
 				},
 				"description": "Search for products by name (case-insensitive)"
 			},
-			"response": [
-				{
-					"name": "Search Products - Success",
-					"originalRequest": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products/search?name=gaming",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"search"
-							],
-							"query": [
-								{
-									"key": "name",
-									"value": "gaming"
-								}
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Gaming Laptop\",\n    \"description\": \"Ultra high-performance gaming laptop\",\n    \"price\": 1599.99,\n    \"quantity\": 3\n  }\n]"
-				}
-			]
+			"response": []
 		},
 		{
 			"name": "Create Product - Validation Error",
@@ -534,6 +331,43 @@
 					]
 				},
 				"description": "Test validation errors with invalid product data"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Audit Logs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/audit-logs",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"audit-logs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete All Audit Logs",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/audit-logs/all",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"audit-logs",
+						"all"
+					]
+				}
 			},
 			"response": []
 		}

@@ -1,7 +1,7 @@
 package com.mrin.gvm.application.service;
 
 import com.mrin.gvm.domain.model.AuditLog;
-import com.mrin.gvm.domain.port.in.AuditLogUseCase;
+import com.mrin.gvm.domain.port.in.AuditLogService;
 import com.mrin.gvm.domain.port.out.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class AuditLogService implements AuditLogUseCase {
+public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
 

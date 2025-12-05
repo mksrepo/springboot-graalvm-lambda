@@ -59,19 +59,19 @@ apply_chaos_experiments() {
     
     # Apply all chaos experiments
     echo "📦 Applying Pod Kill Chaos..."
-    kubectl apply -f k8s/chaos/pod-kill.yaml
+    kubectl apply -f kubernetes/chaos/pod-kill.yaml
     
     echo "📦 Applying Network Delay Chaos..."
-    kubectl apply -f k8s/chaos/network-delay.yaml
+    kubectl apply -f kubernetes/chaos/network-delay.yaml
     
     echo "📦 Applying CPU Stress Chaos..."
-    kubectl apply -f k8s/chaos/cpu-stress.yaml
+    kubectl apply -f kubernetes/chaos/cpu-stress.yaml
     
     echo "📦 Applying Memory Stress Chaos..."
-    kubectl apply -f k8s/chaos/memory-stress.yaml
+    kubectl apply -f kubernetes/chaos/memory-stress.yaml
     
     echo "📦 Applying Database Partition Chaos..."
-    kubectl apply -f k8s/chaos/database-partition.yaml
+    kubectl apply -f kubernetes/chaos/database-partition.yaml
     
     echo ""
     echo "✅ All chaos experiments applied!"
@@ -100,32 +100,32 @@ if [ -z "$INFRA_EXISTS" ]; then
     SETUP_INFRA=true
 else
     echo "✅ Infrastructure already exists - skipping setup for faster deployment"
-    echo "💡 To force full cleanup, run: ./k8s/cleanup-full.sh"
+    echo "💡 To force full cleanup, run: ./kubernetes/cleanup-full.sh"
     SETUP_INFRA=false
 fi
 
 # Clean up existing app deployments (fast, preserves infrastructure)
-chmod +x ./k8s/cleanup.sh
-./k8s/cleanup.sh
+chmod +x ./kubernetes/cleanup.sh
+./kubernetes/cleanup.sh
 
 # Setup infrastructure only if needed
 if [ "$SETUP_INFRA" = true ]; then
     echo "📊 Setting up Prometheus, Grafana, and PostgreSQL..."
-    kubectl apply -f k8s/infra/namespace.yaml
-    kubectl apply -f k8s/infra/database/postgres.yaml
-    kubectl apply -f k8s/infra/monitoring/prometheus.yaml
+    kubectl apply -f kubernetes/infra/namespace.yaml
+    kubectl apply -f kubernetes/infra/database/postgres.yaml
+    kubectl apply -f kubernetes/infra/monitoring/prometheus.yaml
     
     # Create Grafana Dashboard ConfigMap
     kubectl create configmap grafana-dashboards \
       --namespace springboot-graalvm \
-      --from-file=jvm-micrometer.json=k8s/infra/monitoring/provisioning/dashboards/jvm-micrometer.json \
+      --from-file=jvm-micrometer.json=kubernetes/infra/monitoring/provisioning/dashboards/jvm-micrometer.json \
       --dry-run=client -o yaml | kubectl apply -f -
     
-    kubectl apply -f k8s/infra/monitoring/grafana.yaml
+    kubectl apply -f kubernetes/infra/monitoring/grafana.yaml
     
     # Deploy Kafka (Required for Application Audit Logs)
     echo "📦 Deploying Kafka..."
-    kubectl apply -f k8s/kafka/kafka-deployment.yaml
+    kubectl apply -f kubernetes/kafka/kafka-deployment.yaml
     
     # Wait for infrastructure to be ready
     echo "⏳ Waiting for infrastructure stack..."
@@ -150,7 +150,7 @@ fi
 chmod +x ./scripts/build/gvm.aot.sh
 chmod +x ./scripts/build/gvm.jit.sh
 chmod +x ./scripts/reporting/get_startup_time.sh
-chmod +x ./k8s/deploy.sh
+chmod +x ./kubernetes/deploy.sh
 
 # Docker login once before parallel builds (avoids TTY issues)
 echo "🔐 Logging into Docker Hub..."
@@ -224,7 +224,7 @@ echo "🔍 Useful Commands"
 echo "================================"
 echo "  View pods:   kubectl get pods -n springboot-graalvm"
 echo "  View logs:   kubectl logs -f <pod-name> -n springboot-graalvm"
-echo "  Cleanup:     ./k8s/cleanup.sh"
+echo "  Cleanup:     ./kubernetes/cleanup.sh"
 echo "  Report:      cat report/aot_vs_jit.md"
 
 if [ "$CHAOS_MODE" = true ]; then
@@ -233,7 +233,7 @@ if [ "$CHAOS_MODE" = true ]; then
     echo "🌪️ Chaos Engineering Commands"
     echo "================================"
     echo "  View chaos:  kubectl get podchaos,networkchaos,stresschaos -n springboot-graalvm"
-    echo "  Stop chaos:  ./k8s/chaos/stop-chaos.sh"
+    echo "  Stop chaos:  ./kubernetes/chaos/stop-chaos.sh"
     echo "  Dashboard:   kubectl port-forward -n chaos-mesh svc/chaos-dashboard 2333:2333"
 fi
 

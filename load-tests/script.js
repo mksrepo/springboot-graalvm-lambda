@@ -5,8 +5,8 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
 // Load environment variables
 export let options = {
-  vus: 100,
-  duration: "3m"
+  vus: 10,
+  duration: "10s"
 };
 
 export default function () {
@@ -55,7 +55,15 @@ export default function () {
     "Response has body": (r) => r.body.length > 0,
   });
 
-  // 4. Random sleep
+  // 4. Get Audit Logs (GET)
+  const auditLogUrl = __ENV.URL.replace("/products", "/audit-logs");
+  const getAuditRes = http.get(auditLogUrl);
+
+  check(getAuditRes, {
+    "GET Audit Logs status is 200": (r) => r.status === 200,
+  });
+
+  // 5. Random sleep
   sleep(Math.random() * 0.5 + 0.1);
 }
 

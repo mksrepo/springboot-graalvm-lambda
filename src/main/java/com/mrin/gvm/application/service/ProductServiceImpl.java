@@ -1,7 +1,7 @@
 package com.mrin.gvm.application.service;
 
 import com.mrin.gvm.domain.model.Product;
-import com.mrin.gvm.domain.port.in.ProductUseCase;
+import com.mrin.gvm.domain.port.in.ProductService;
 import com.mrin.gvm.domain.port.out.ProductPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @RequiredArgsConstructor
-public class ProductService implements ProductUseCase {
+public class ProductServiceImpl implements ProductService {
 
     private final ProductPersistencePort persistencePort;
 

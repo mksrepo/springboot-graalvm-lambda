@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * Defines the operations that can be performed on products.
  * This is the primary port (hexagon boundary) for product operations.
  */
-public interface ProductUseCase {
+public interface ProductService {
 
     /**
      * Create a new product.
