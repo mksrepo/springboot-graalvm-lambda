@@ -1,12 +1,23 @@
 #!/bin/bash
-
-# Get pod startup time in milliseconds
+# ============================================================================
+# Pod Startup Time Calculator
+#
+# Calculates the startup time of a Spring Boot pod in milliseconds by:
+# 1. Parsing application logs for "Started ... in X seconds"
+# 2. Fallback: Calculating formatted CreationTimestamp vs Ready Condition time
+#
 # Usage: ./get_startup_time.sh <app-label>
+# ============================================================================
 
 APP_LABEL=$1
 NAMESPACE="springboot-graalvm"
 
-# Get the most recent pod
+if [ -z "$APP_LABEL" ]; then
+    echo "Usage: $0 <app-label>"
+    exit 1
+fi
+
+# Get the most recent pod for the given label
 POD_NAME=$(kubectl get pods -n ${NAMESPACE} -l app=${APP_LABEL} --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}' 2>/dev/null)
 
 if [ -z "$POD_NAME" ]; then
@@ -14,52 +25,39 @@ if [ -z "$POD_NAME" ]; then
     exit 0
 fi
 
-# Helper function to get startup time from logs
-get_log_startup_time() {
-    local pod=$1
-    # Try to find the standard Spring Boot startup log line
-    # Matches: "Started SpringbootGraalvmLambdaApplication in 0.048 seconds"
-    local log_line=$(kubectl logs -n ${NAMESPACE} ${pod} 2>/dev/null | grep "Started SpringbootGraalvmLambdaApplication")
-    
-    if [ -n "$log_line" ]; then
-        # Extract the seconds value (e.g. 0.048)
-        local seconds=$(echo "$log_line" | grep -o "[0-9]*\.[0-9]* seconds" | awk '{print $1}')
-        if [ -n "$seconds" ]; then
-            # Convert to milliseconds (remove decimal point, handle leading zeros)
-            # Python is reliable for floating point arithmetic here
-            python3 -c "print(int(float($seconds) * 1000))"
-            return 0
-        fi
-    fi
-    return 1
-}
+# --- Strategy 1: Log Parsing (More Accurate) ---
+# Spring Boot logs the exact startup time, e.g., "Started Application in 0.45 seconds"
+LOG_LINE=$(kubectl logs -n ${NAMESPACE} ${POD_NAME} 2>/dev/null | grep "Started SpringbootGraalvmLambdaApplication")
 
-# 1. Try to get real startup time from application logs
-LOG_STARTUP_MS=$(get_log_startup_time "$POD_NAME")
-if [ $? -eq 0 ]; then
-    echo "$LOG_STARTUP_MS"
-    exit 0
+if [ -n "$LOG_LINE" ]; then
+    # Extract seconds (e.g., 0.048) and convert to ms
+    SECONDS=$(echo "$LOG_LINE" | grep -o "[0-9]*\.[0-9]* seconds" | awk '{print $1}')
+    if [ -n "$SECONDS" ]; then
+        python3 -c "print(int(float($SECONDS) * 1000))"
+        exit 0
+    fi
 fi
 
-# 2. Fallback: Get pod creation time and container ready time (Kubernetes "Ready" time)
+# --- Strategy 2: K8s Events (Fallback) ---
+# Calculates (Ready Timestamp - Creation Timestamp)
 CREATED=$(kubectl get pod ${POD_NAME} -n ${NAMESPACE} -o jsonpath='{.metadata.creationTimestamp}')
 READY=$(kubectl get pod ${POD_NAME} -n ${NAMESPACE} -o jsonpath='{.status.conditions[?(@.type=="Ready")].lastTransitionTime}')
 
-if [ -z "$CREATED" ] || [ -z "$READY" ]; then
-    echo "0"
+if [ -n "$CREATED" ] && [ -n "$READY" ]; then
+    # Convert timestamps to seconds since epoch (Handles macOS/BSD date vs GNU date)
+    CREATED_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CREATED" "+%s" 2>/dev/null || date -d "$CREATED" "+%s" 2>/dev/null)
+    READY_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$READY" "+%s" 2>/dev/null || date -d "$READY" "+%s" 2>/dev/null)
+    
+    STARTUP_MS=$(( (READY_SEC - CREATED_SEC) * 1000 ))
+    
+    # Return 0 if calculation goes negative (clock skew/race condition)
+    if [ $STARTUP_MS -lt 0 ]; then
+        echo "0"
+    else
+        echo "$STARTUP_MS"
+    fi
     exit 0
 fi
 
-# Convert to seconds since epoch
-CREATED_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CREATED" "+%s" 2>/dev/null || date -d "$CREATED" "+%s" 2>/dev/null)
-READY_SEC=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$READY" "+%s" 2>/dev/null || date -d "$READY" "+%s" 2>/dev/null)
-
-# Calculate difference in milliseconds
-STARTUP_MS=$(( (READY_SEC - CREATED_SEC) * 1000 ))
-
-# Ensure positive value
-if [ $STARTUP_MS -lt 0 ]; then
-    STARTUP_MS=0
-fi
-
-echo $STARTUP_MS
+# Default if all else fails
+echo "0"
