@@ -130,7 +130,8 @@ echo "✅ Build pipeline completed successfully."
 # --- 9. Activate Chaos Experiments (Conditional) ---
 if [ "$CHAOS_MODE" = true ]; then
     echo "🧹 Resetting chaos state..."
-    kubectl delete podchaos,networkchaos,stresschaos -n springboot-graalvm --all --ignore-not-found=true
+    chmod +x ./kubernetes/chaos/stop-chaos.sh
+    ./kubernetes/chaos/stop-chaos.sh
     
     sleep 5
     apply_chaos_experiments
