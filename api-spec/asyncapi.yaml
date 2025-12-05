@@ -1,0 +1,129 @@
+asyncapi: 3.0.0
+info:
+  title: Product Audit Events API
+  version: 1.0.0
+  description: |
+    AsyncAPI specification for product audit logging events.
+    Tracks all product operations including failures during chaos engineering tests.
+
+servers:
+  production:
+    host: kafka:9092
+    protocol: kafka
+    description: Kafka broker in Kubernetes
+
+channels:
+  product.audit.events:
+    address: product.audit.events
+    description: All product operation audit events
+    messages:
+      AuditEvent:
+        $ref: '#/components/messages/AuditEvent'
+
+  product.audit.failed:
+    address: product.audit.failed
+    description: Failed operations for analysis
+    messages:
+      FailedEvent:
+        $ref: '#/components/messages/AuditEvent'
+
+operations:
+  publishAuditEvent:
+    action: send
+    channel:
+      $ref: '#/channels/product.audit.events'
+    summary: Publish product audit events
+    messages:
+      - $ref: '#/components/messages/AuditEvent'
+
+  consumeAuditEvent:
+    action: receive
+    channel:
+      $ref: '#/channels/product.audit.events'
+    summary: Consume and persist audit events
+    messages:
+      - $ref: '#/components/messages/AuditEvent'
+
+components:
+  messages:
+    AuditEvent:
+      name: AuditEvent
+      title: Product Audit Event
+      summary: Event representing a product operation
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/AuditEventPayload'
+
+  schemas:
+    AuditEventPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - operation
+        - status
+        - requestTimestamp
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique identifier for the event
+        eventType:
+          type: string
+          enum:
+            - ProductCREATEATTEMPTED
+            - ProductCREATESUCCEEDED
+            - ProductCREATEFAILED
+            - ProductUPDATEATTEMPTED
+            - ProductUPDATESUCCEEDED
+            - ProductUPDATEFAILED
+            - ProductDELETEATTEMPTED
+            - ProductDELETESUCCEEDED
+            - ProductDELETEFAILED
+          description: Type of audit event
+        entityType:
+          type: string
+          default: Product
+          description: Type of entity being audited
+        entityId:
+          type: integer
+          format: int64
+          description: ID of the entity (null if creation failed)
+        operation:
+          type: string
+          enum: [CREATE, UPDATE, DELETE, READ]
+          description: Operation type
+        status:
+          type: string
+          enum: [ATTEMPTED, SUCCEEDED, FAILED]
+          description: Operation status
+        requestPayload:
+          type: object
+          description: Original request data
+        responsePayload:
+          type: object
+          description: Response data or error
+        errorMessage:
+          type: string
+          description: Error message if operation failed
+        httpStatusCode:
+          type: integer
+          description: HTTP status code
+        requestTimestamp:
+          type: string
+          format: date-time
+          description: When the request was made
+        completionTimestamp:
+          type: string
+          format: date-time
+          description: When the operation completed
+        durationMs:
+          type: integer
+          format: int64
+          description: Operation duration in milliseconds
+        podName:
+          type: string
+          description: Kubernetes pod that handled the request
+        chaosActive:
+          type: boolean
+          description: Whether chaos engineering was active

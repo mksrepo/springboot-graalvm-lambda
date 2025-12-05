@@ -123,9 +123,14 @@ if [ "$SETUP_INFRA" = true ]; then
     
     kubectl apply -f k8s/infra/monitoring/grafana.yaml
     
+    # Deploy Kafka (Required for Application Audit Logs)
+    echo "📦 Deploying Kafka..."
+    kubectl apply -f k8s/kafka/kafka-deployment.yaml
+    
     # Wait for infrastructure to be ready
     echo "⏳ Waiting for infrastructure stack..."
     kubectl wait --for=condition=available --timeout=120s deployment/postgres -n springboot-graalvm 2>/dev/null || true
+    kubectl wait --for=condition=available --timeout=120s deployment/kafka -n springboot-graalvm 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=60s deployment/prometheus -n springboot-graalvm 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=60s deployment/grafana -n springboot-graalvm 2>/dev/null || true
 else

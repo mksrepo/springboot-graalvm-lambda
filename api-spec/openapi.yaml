@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Product Management API
+  version: 2.0.0
+  description: |
+    RESTful API for managing products with reactive R2DBC and AsyncAPI audit logging.
+    
+    **Features:**
+    - Reactive Spring WebFlux endpoints
+    - R2DBC PostgreSQL persistence
+    - Kafka-based audit logging (AsyncAPI)
+    - Chaos engineering resilience testing
+    - GraalVM Native Image (AOT) and JIT deployments
+    
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:30001/api
+    description: AOT Deployment (Kubernetes NodePort)
+  - url: http://localhost:30002/api
+    description: JIT Deployment (Kubernetes NodePort)
+
+tags:
+  - name: Products
+    description: Product CRUD operations
+  - name: Audit Logs
+    description: Audit logging and chaos impact analysis
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      description: Returns a list of all products in the system
+      operationId: getAllProducts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    
+    post:
+      tags:
+        - Products
+      summary: Create a new product
+      description: |
+        Creates a new product and publishes audit events to Kafka.
+        
+        **Audit Events Published:**
+        - ProductCREATEATTEMPTED (before operation)
+        - ProductCREATESUCCEEDED (on success)
+        - ProductCREATEFAILED (on failure)
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error (possibly due to chaos)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Products
+      summary: Delete all products
+      description: Deletes all products from the system
+      operationId: deleteAllProducts
+      responses:
+        '204':
+          description: All products deleted successfully
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      description: Returns a single product by ID
+      operationId: getProductById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Products
+      summary: Update a product
+      description: Updates an existing product
+      operationId: updateProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Products
+      summary: Delete a product
+      description: Deletes a product by ID
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Product deleted successfully
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/search:
+    get:
+      tags:
+        - Products
+      summary: Search products by name
+      description: Returns products matching the search query
+      operationId: searchProducts
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Product name to search for
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - quantity
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique product identifier
+          example: 1
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Product name
+          example: "Laptop"
+        description:
+          type: string
+          maxLength: 500
+          description: Product description
+          example: "High-performance laptop for developers"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Product price
+          example: 999.99
+        quantity:
+          type: integer
+          minimum: 0
+          description: Available quantity
+          example: 50
+    
+    ProductInput:
+      type: object
+      required:
+        - name
+        - price
+        - quantity
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Product name
+          example: "Laptop"
+        description:
+          type: string
+          maxLength: 500
+          description: Product description
+          example: "High-performance laptop for developers"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Product price
+          example: 999.99
+        quantity:
+          type: integer
+          minimum: 0
+          description: Available quantity
+          example: 50
+    
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        status:
+          type: integer
+          description: HTTP status code
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Error message
+        path:
+          type: string
+          description: Request path
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication (not currently implemented)

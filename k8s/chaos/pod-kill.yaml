@@ -4,7 +4,7 @@ metadata:
   name: pod-kill-schedule
   namespace: springboot-graalvm
 spec:
-  schedule: "@every 30s"
+  schedule: "@every 5m"
   type: "PodChaos"
   historyLimit: 5
   concurrencyPolicy: "Forbid"
@@ -25,7 +25,7 @@ metadata:
   name: pod-kill-schedule-jit
   namespace: springboot-graalvm
 spec:
-  schedule: "@every 30s"
+  schedule: "@every 5m"
   type: "PodChaos"
   historyLimit: 5
   concurrencyPolicy: "Forbid"

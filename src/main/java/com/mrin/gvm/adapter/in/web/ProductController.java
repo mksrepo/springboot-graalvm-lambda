@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 public class ProductController {
 
     private final ProductUseCase productUseCase;
+    private final com.mrin.gvm.application.interceptor.AuditInterceptor auditInterceptor;
 
     /**
      * Create a new product.
@@ -29,7 +30,10 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Product> createProduct(@RequestBody Product product) {
-        return productUseCase.createProduct(product);
+        return auditInterceptor.auditOperation(
+                productUseCase.createProduct(product),
+                "CREATE",
+                product);
     }
 
     /**
