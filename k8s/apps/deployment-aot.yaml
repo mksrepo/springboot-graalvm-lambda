@@ -43,8 +43,7 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
-        - name: CHAOS_MONKEY_ENABLED
-          value: "false"
+
         resources:
           requests:
             memory: "512Mi"

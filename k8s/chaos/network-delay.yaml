@@ -1,0 +1,47 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: network-delay-schedule
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 3m"
+  type: "NetworkChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  networkChaos:
+    action: delay
+    mode: all
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-aot"
+    delay:
+      latency: "500ms"
+      correlation: "25"
+      jitter: "100ms"
+    duration: "1m"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: network-delay-schedule-jit
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 3m"
+  type: "NetworkChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  networkChaos:
+    action: delay
+    mode: all
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-jit"
+    delay:
+      latency: "500ms"
+      correlation: "25"
+      jitter: "100ms"
+    duration: "1m"

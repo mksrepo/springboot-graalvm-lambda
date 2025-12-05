@@ -9,38 +9,38 @@ This report compares the performance of the **AOT** (Ahead-of-Time, GraalVM Nati
 
 | Metric | AOT (GraalVM Native Image) | JIT (JVM) | Winner | Improvement |
 | :--- | :--- | :--- | :--- | :--- |
-| **🚀 Total Requests** | 648 | 513 | 🏆 AOT | ⬆️ +26.3% |
-| **⚡ Throughput** | 14.441723/s | 12.590066/s | 🏆 AOT | ⬆️ +14.7% |
-| **⏱️ Avg Response Time** | 5.86s | 7.09s | 🏆 AOT | ⬇️ -17.3% |
-| **📈 p95 Response Time** | 17.8s | 26.99s | 🏆 AOT | ⬇️ -34.0% |
-| **❌ Failure Count** | 0 | 9 | - | ⬇️ - |
-| **📦 Data Received** | 458 MB | 349 MB | 🏆 AOT | ⬆️ +31.2% |
-| **🔨 Docker Build Time** |      2 seconds |      1 seconds | 🥈 JIT | ⬇️ -50.0% |
-| **💾 Docker Image Size** |      286MB |      536MB | 🏆 AOT | ⬇️ -46.6% |
-| **📤 Docker Push Time** |       7 seconds |       7 seconds | 🤝 Tie | ➡️ 0.0% |
-| **☸️ K8s Deployment Time** |    34 seconds |    34 seconds | 🤝 Tie | ➡️ 0.0% |
-| **🚦 Pod Startup Time** | 34000 ms | 34000 ms | 🤝 Tie | ➡️ 0.0% |
+| **🚀 Total Requests** | 40424 | 3768 | 🏆 AOT | ⬆️ +972.8% |
+| **⚡ Throughput** | 201.318827/s | 20.067991/s | 🏆 AOT | ⬆️ +903.2% |
+| **⏱️ Avg Response Time** | 475.33ms | 4.78s | 🏆 AOT | ⬇️ -90.1% |
+| **📈 p95 Response Time** | 1.05s | 12.94s | 🏆 AOT | ⬇️ -91.9% |
+| **❌ Failure Count** | 38730 | 12 | 🥈 JIT | ⬇️ -100.0% |
+| **📦 Data Received** | 999 MB | 2.3 GB | 🏆 AOT | ⬆️ +43334.8% |
+| **🔨 Docker Build Time** |      3 seconds |      2 seconds | 🥈 JIT | ⬇️ -33.3% |
+| **💾 Docker Image Size** |      285MB |      533MB | 🏆 AOT | ⬇️ -46.5% |
+| **📤 Docker Push Time** |       6 seconds |       7 seconds | 🏆 AOT | ⬇️ -14.3% |
+| **☸️ K8s Deployment Time** |    54 seconds |    32 seconds | 🥈 JIT | ⬇️ -40.7% |
+| **🚦 Pod Startup Time** | 31000 ms | 32000 ms | 🏆 AOT | ⬇️ -3.1% |
 
 ---
 
 ## 🔑 Key Findings
 
 ### 🏆 Performance Metrics
-1. **⚡ Throughput**: AOT achieved **14.441723/s** vs JIT **12.590066/s**
-   - Winner: **AOT** with **+14.7%** improvement
+1. **⚡ Throughput**: AOT achieved **201.318827/s** vs JIT **20.067991/s**
+   - Winner: **AOT** with **+903.2%** improvement
 
-2. **⏱️ Latency**: AOT Avg Latency **5.86s** vs JIT **7.09s**
-   - Winner: **AOT** with **-17.3%** improvement
+2. **⏱️ Latency**: AOT Avg Latency **475.33ms** vs JIT **4.78s**
+   - Winner: **AOT** with **-90.1%** improvement
 
-3. **✅ Reliability**: AOT had **0** failures vs JIT **9** failures
-   - Winner: **-** with **-** improvement
+3. **✅ Reliability**: AOT had **38730** failures vs JIT **12** failures
+   - Winner: **JIT** with **-100.0%** improvement
 
 ### 📦 Deployment Metrics
-4. **💾 Image Size**: AOT **     286MB** vs JIT **     536MB**
-   - Winner: **AOT** with **-46.6%** improvement
+4. **💾 Image Size**: AOT **     285MB** vs JIT **     533MB**
+   - Winner: **AOT** with **-46.5%** improvement
 
-5. **🚦 Startup Time**: AOT **34000 ms** vs JIT **34000 ms**
-   - Winner: **Tie** with **0.0%** improvement
+5. **🚦 Startup Time**: AOT **31000 ms** vs JIT **32000 ms**
+   - Winner: **AOT** with **-3.1%** improvement
 
 ---
 

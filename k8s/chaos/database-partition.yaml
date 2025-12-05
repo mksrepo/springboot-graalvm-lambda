@@ -1,0 +1,55 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: database-partition-schedule
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 6m"
+  type: "NetworkChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  networkChaos:
+    action: partition
+    mode: all
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-aot"
+    direction: to
+    target:
+      mode: all
+      selector:
+        namespaces:
+          - springboot-graalvm
+        labelSelectors:
+          "app": "postgres"
+    duration: "20s"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: database-partition-schedule-jit
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 6m"
+  type: "NetworkChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  networkChaos:
+    action: partition
+    mode: all
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-jit"
+    direction: to
+    target:
+      mode: all
+      selector:
+        namespaces:
+          - springboot-graalvm
+        labelSelectors:
+          "app": "postgres"
+    duration: "20s"

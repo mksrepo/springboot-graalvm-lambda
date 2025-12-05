@@ -80,12 +80,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
-		<!-- Chaos Monkey for Spring Boot -->
-		<dependency>
-			<groupId>de.codecentric</groupId>
-			<artifactId>chaos-monkey-spring-boot</artifactId>
-			<version>3.2.2</version> <!-- Latest version compatible with Spring Boot 3.x -->
-		</dependency>
+
 
 	</dependencies>
 
