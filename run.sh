@@ -1,76 +1,70 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting AOT and JIT deployment to Kubernetes"
-
-
-
 # ============================================================================
-# FUNCTION: Apply Chaos Experiments
+# GraalVM Spring Boot Lambda - Deployment Orchestrator
+#
+# This script orchestrates the end-to-end deployment lifecycle:
+# 1. Infrastructure Setup (PostgreSQL, Kafka, Prometheus, Grafana)
+# 2. Chaos Mesh Installation (optional via --chaos)
+# 3. Application Build & Test (AOT and JIT sequentially)
+# 4. Performance Reporting
 # ============================================================================
+
+echo "🚀 Starting Deployment Orchestrator..."
+
+# --- Function: Apply Chaos Experiments ---
 apply_chaos_experiments() {
-    echo ""
     echo "🔥 Applying Chaos Engineering Experiments..."
     
-    # Apply all chaos experiments
-    echo "📦 Applying Pod Kill Chaos..."
+    # Apply resiliency tests
     kubectl apply -f kubernetes/chaos/pod-kill.yaml
-    
-    echo "📦 Applying Network Delay Chaos..."
     kubectl apply -f kubernetes/chaos/network-delay.yaml
-    
-    echo "📦 Applying CPU Stress Chaos..."
     kubectl apply -f kubernetes/chaos/cpu-stress.yaml
-    
-    echo "📦 Applying Memory Stress Chaos..."
     kubectl apply -f kubernetes/chaos/memory-stress.yaml
-    
-    echo "📦 Applying Database Partition Chaos..."
     kubectl apply -f kubernetes/chaos/database-partition.yaml
     
-    echo ""
-    echo "✅ All chaos experiments applied!"
+    echo "✅ Chaos experiments scheduled successfully."
 }
 
-# ============================================================================
-# MAIN SCRIPT
-# ============================================================================
-
-# Check for chaos mode
+# --- 1. Parse Arguments ---
 CHAOS_MODE=false
-CHAOS_FLAG=""
 if [[ "$1" == "--chaos" ]]; then
     CHAOS_MODE=true
-    CHAOS_FLAG="--chaos"
-    echo "🌪️ Kubernetes Chaos Engineering Mode Enabled!"
+    echo "🌪️ Chaos Mode: ENABLED"
 else
-    echo "✅ Standard Mode (No Chaos)"
+    echo "✅ Chaos Mode: DISABLED"
 fi
 
-# Check if infrastructure already exists
+# --- 2. Infrastructure Check ---
+# Checks if the namespace exists to determine if full setup is needed
 INFRA_EXISTS=$(kubectl get namespace springboot-graalvm 2>/dev/null)
 
 if [ -z "$INFRA_EXISTS" ]; then
-    echo "📦 First run detected - setting up infrastructure..."
+    echo "📦 New environment detected. Starting full setup..."
     SETUP_INFRA=true
 else
-    echo "✅ Infrastructure already exists - skipping setup for faster deployment"
-    echo "💡 To force full cleanup, run: ./kubernetes/cleanup-full.sh"
+    echo "✅ Environment exists. Skipping infra setup."
     SETUP_INFRA=false
 fi
 
-# Clean up existing app deployments (fast, preserves infrastructure)
+# --- 3. Cleanup Previous Deployments ---
+# Always clean up application pods to ensure fresh deployment
 chmod +x ./kubernetes/cleanup.sh
 ./kubernetes/cleanup.sh
 
-# Setup infrastructure only if needed
+# --- 4. Infrastructure Provisioning ---
 if [ "$SETUP_INFRA" = true ]; then
-    echo "📊 Setting up Prometheus, Grafana, and PostgreSQL..."
+    echo "🛠️ Provisioning infrastructure resources..."
+    
+    # Base Namespace & Database
     kubectl apply -f kubernetes/infra/namespace.yaml
     kubectl apply -f kubernetes/infra/database/postgres.yaml
+    
+    # Monitoring Stack (Prometheus & Grafana)
     kubectl apply -f kubernetes/infra/monitoring/prometheus.yaml
     
-    # Create Grafana Dashboard ConfigMap
+    # Grafana Dashboard Injection
     kubectl create configmap grafana-dashboards \
       --namespace springboot-graalvm \
       --from-file=jvm-micrometer.json=kubernetes/infra/monitoring/provisioning/dashboards/jvm-micrometer.json \
@@ -78,118 +72,86 @@ if [ "$SETUP_INFRA" = true ]; then
     
     kubectl apply -f kubernetes/infra/monitoring/grafana.yaml
     
-    # Deploy Kafka (Required for Application Audit Logs)
-    echo "📦 Deploying Kafka..."
+    # Event Streaming (Kafka)
     kubectl apply -f kubernetes/kafka/kafka-deployment.yaml
     
-    # Wait for infrastructure to be ready
-    echo "⏳ Waiting for infrastructure stack..."
+    # Wait for completion
+    echo "hourglass_flowing_sand Waiting for services to stabilize..."
+    # Suppress output unless error
     kubectl wait --for=condition=available --timeout=120s deployment/postgres -n springboot-graalvm 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=120s deployment/kafka -n springboot-graalvm 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=60s deployment/prometheus -n springboot-graalvm 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=60s deployment/grafana -n springboot-graalvm 2>/dev/null || true
-else
-    echo "⚡ Skipping infrastructure setup (already running)"
 fi
 
-# Install Chaos Mesh if chaos mode is enabled
+# --- 5. Chaos Mesh Setup (Conditional) ---
 if [ "$CHAOS_MODE" = true ]; then
     if ! kubectl get namespace chaos-mesh &> /dev/null; then
         ./kubernetes/chaos/install-chaos-mesh.sh
-    else
-        echo "✅ Chaos Mesh already installed"
     fi
 fi
 
-# Make scripts executable
+# --- 6. Execution Permissions ---
 chmod +x ./scripts/build/gvm.aot.sh
 chmod +x ./scripts/build/gvm.jit.sh
 chmod +x ./scripts/reporting/get_startup_time.sh
 chmod +x ./kubernetes/deploy.sh
+chmod +x ./scripts/reporting/generate_report.sh
 
-# Docker login once before parallel builds (avoids TTY issues)
-echo "🔐 Logging into Docker Hub..."
+# --- 7. Docker Authentication ---
+# Required for pushing images to registry
 docker login
 
-# Run AOT and JIT deployments sequentially to avoid database contention
-echo ""
-echo "🚀 Starting sequential builds to avoid database contention..."
+# --- 8. Build & Deploy (Sequential) ---
+# Running sequentially prevents resource contention on local docker daemon/DB
+echo "🏗️ Starting sequential build pipeline..."
 
-echo "  ⚡ Building and testing AOT first..."
+echo "⚡ [1/2] Processing AOT Build..."
 ./scripts/build/gvm.aot.sh
 AOT_EXIT=$?
 
-echo "  ⚡ Building and testing JIT second..."
+echo "⚡ [2/2] Processing JIT Build..."
 ./scripts/build/gvm.jit.sh
 JIT_EXIT=$?
 
-# Check if both builds succeeded
+# Validate Build Status
 if [ $AOT_EXIT -ne 0 ]; then
-    echo "❌ AOT build failed with exit code $AOT_EXIT"
+    echo "❌ AOT build failed ($AOT_EXIT). Aborting."
     exit 1
 fi
 
 if [ $JIT_EXIT -ne 0 ]; then
-    echo "❌ JIT build failed with exit code $JIT_EXIT"
+    echo "❌ JIT build failed ($JIT_EXIT). Aborting."
     exit 1
 fi
 
-echo "✅ Both AOT and JIT builds completed successfully!"
+echo "✅ Build pipeline completed successfully."
 
-# Apply Kubernetes-level chaos if requested
+# --- 9. Activate Chaos Experiments (Conditional) ---
 if [ "$CHAOS_MODE" = true ]; then
-    echo ""
-    echo "🧹 Cleaning up any stuck chaos experiments..."
-    # Delete any existing pod chaos experiments that might be stuck
-    kubectl delete podchaos -n springboot-graalvm -l managed-by=pod-kill-schedule --ignore-not-found=true
-    kubectl delete podchaos -n springboot-graalvm -l managed-by=pod-kill-schedule-jit --ignore-not-found=true
+    echo "🧹 Resetting chaos state..."
+    kubectl delete podchaos,networkchaos,stresschaos -n springboot-graalvm --all --ignore-not-found=true
     
-    echo "⏳ Waiting 5 seconds for cleanup to complete..."
     sleep 5
-    
     apply_chaos_experiments
-    echo ""
-    echo "🔥 Chaos experiments are now active!"
-    echo "   Monitor at: http://localhost:2333"
-    echo "   Port-forward: kubectl port-forward -n chaos-mesh svc/chaos-dashboard 2333:2333"
 fi
 
-# Generate performance report
-chmod +x ./scripts/reporting/generate_report.sh
+# --- 10. Generate Report ---
 ./scripts/reporting/generate_report.sh
 
+# --- 11. Summary & Access Points ---
 echo ""
-echo "✅ Deployment completed!"
-echo ""
-echo "================================"
-echo "📊 Access Points"
-echo "================================"
-echo "  AOT Application:  http://localhost:30001/api/products"
-echo "  JIT Application:  http://localhost:30002/api/products"
-echo "  Prometheus:       http://localhost:30003"
-echo "  Grafana:          http://localhost:30004 (admin/admin)"
-
+echo "=================================================="
+echo "🎉 Deployment Complete"
+echo "=================================================="
+echo "📊 Dashboard Access:"
+echo "  • AOT API:         http://localhost:30001/api/products"
+echo "  • JIT API:         http://localhost:30002/api/products"
+echo "  • Prometheus:      http://localhost:30003"
+echo "  • Grafana:         http://localhost:30004 (admin/admin)"
 if [ "$CHAOS_MODE" = true ]; then
-    echo "  Chaos Dashboard:  http://localhost:2333 (port-forward required)"
+echo "  • Chaos Dashboard: http://localhost:2333"
 fi
-
 echo ""
-echo "================================"
-echo "🔍 Useful Commands"
-echo "================================"
-echo "  View pods:   kubectl get pods -n springboot-graalvm"
-echo "  View logs:   kubectl logs -f <pod-name> -n springboot-graalvm"
-echo "  Cleanup:     ./kubernetes/cleanup.sh"
-echo "  Report:      cat report/aot_vs_jit.md"
-
-if [ "$CHAOS_MODE" = true ]; then
-    echo ""
-    echo "================================"
-    echo "🌪️ Chaos Engineering Commands"
-    echo "================================"
-    echo "  View chaos:  kubectl get podchaos,networkchaos,stresschaos -n springboot-graalvm"
-    echo "  Stop chaos:  ./kubernetes/chaos/stop-chaos.sh"
-    echo "  Dashboard:   kubectl port-forward -n chaos-mesh svc/chaos-dashboard 2333:2333"
-fi
-
-echo "================================"
+echo "📝 Report: cat report/aot_vs_jit.md"
+echo "=================================================="
