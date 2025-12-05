@@ -21,13 +21,14 @@ import java.util.UUID;
 public class AuditInterceptor {
 
     private final AuditEventPublisher auditEventPublisher;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public <T> Mono<T> auditOperation(
             Mono<T> operation,
             String operationType,
             Object requestPayload) {
         String eventId = UUID.randomUUID().toString();
-        Instant startTime = Instant.now();
+        java.time.OffsetDateTime startTime = java.time.OffsetDateTime.now();
 
         // Publish ATTEMPTED event
         AuditEvent attemptedEvent = buildEvent(eventId, operationType, "ATTEMPTED", requestPayload, startTime);
@@ -38,9 +39,19 @@ public class AuditInterceptor {
                     // Publish SUCCEEDED event
                     AuditEvent successEvent = buildEvent(eventId, operationType, "SUCCEEDED", requestPayload,
                             startTime);
-                    successEvent.setResponsePayload(result);
-                    successEvent.setCompletionTimestamp(Instant.now());
-                    successEvent.setDurationMs(Duration.between(startTime, Instant.now()).toMillis());
+
+                    if (result != null) {
+                        try {
+                            successEvent.setResponsePayload(
+                                    objectMapper.convertValue(result, com.mrin.gvm.domain.event.ResponsePayload.class));
+                        } catch (Exception e) {
+                            log.warn("Failed to convert response payload", e);
+                        }
+                    }
+
+                    successEvent.setCompletionTimestamp(java.time.OffsetDateTime.now());
+                    successEvent.setDurationMs(
+                            (int) java.time.Duration.between(startTime, java.time.OffsetDateTime.now()).toMillis());
                     successEvent.setHttpStatusCode(201);
 
                     auditEventPublisher.publishEvent(successEvent).subscribe();
@@ -49,25 +60,35 @@ public class AuditInterceptor {
                     // Publish FAILED event
                     AuditEvent failedEvent = buildEvent(eventId, operationType, "FAILED", requestPayload, startTime);
                     failedEvent.setErrorMessage(error.getMessage());
-                    failedEvent.setCompletionTimestamp(Instant.now());
-                    failedEvent.setDurationMs(Duration.between(startTime, Instant.now()).toMillis());
+                    failedEvent.setCompletionTimestamp(java.time.OffsetDateTime.now());
+                    failedEvent.setDurationMs(
+                            (int) java.time.Duration.between(startTime, java.time.OffsetDateTime.now()).toMillis());
                     failedEvent.setHttpStatusCode(500);
 
                     auditEventPublisher.publishFailedEvent(failedEvent).subscribe();
                 });
     }
 
-    private AuditEvent buildEvent(String eventId, String operation, String status, Object payload, Instant timestamp) {
-        return AuditEvent.builder()
-                .eventId(eventId)
-                .eventType("Product" + operation + status)
-                .entityType("Product")
-                .operation(operation)
-                .status(status)
-                .requestPayload(payload)
-                .requestTimestamp(timestamp)
-                .podName(System.getenv("HOSTNAME"))
-                .chaosActive(false) // Can be enhanced to detect chaos
-                .build();
+    private AuditEvent buildEvent(String eventId, String operation, String status, Object payload,
+            java.time.OffsetDateTime timestamp) {
+        com.mrin.gvm.domain.event.RequestPayload rp = null;
+        if (payload != null) {
+            try {
+                rp = objectMapper.convertValue(payload, com.mrin.gvm.domain.event.RequestPayload.class);
+            } catch (Exception e) {
+                log.warn("Failed to convert request payload", e);
+            }
+        }
+
+        return new AuditEvent()
+                .withEventId(eventId)
+                .withEventType("Product" + operation + status)
+                .withEntityType("Product")
+                .withOperation(operation)
+                .withStatus(status)
+                .withRequestPayload(rp)
+                .withRequestTimestamp(timestamp)
+                .withPodName(System.getenv("HOSTNAME"))
+                .withChaosActive(false);
     }
 }

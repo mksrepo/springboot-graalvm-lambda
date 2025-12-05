@@ -1,0 +1,107 @@
+asyncapi: '2.6.0'
+info:
+  title: Product Setup Service AsyncAPI
+  version: '1.0.0'
+  description: |
+    Asynchronous event definitions for the Spring Boot GraalVM Lambda application.
+    This service publishes audit logs and failure events to Kafka.
+
+servers:
+  local:
+    url: localhost:9092
+    protocol: kafka
+    description: Local Kafka broker
+
+channels:
+  product.audit.events:
+    publish:
+      operationId: onProductAuditEvent
+      summary: Publish successful audit events
+      description: |
+        Published when a product operation (create, update, delete) is successfully processed.
+        Used for audit logging and compliance.
+      message:
+        $ref: '#/components/messages/AuditEvent'
+  
+  product.audit.failed:
+    publish:
+      operationId: onProductAuditFailed
+      summary: Publish failed audit events
+      description: |
+        Published when a product operation fails.
+        Contains error details and context for debugging.
+      message:
+        $ref: '#/components/messages/AuditEvent'
+
+components:
+  messages:
+    AuditEvent:
+      name: AuditEvent
+      title: Audit Event
+      summary: Represents a single audit log entry
+      payload:
+        $ref: '#/components/schemas/AuditEvent'
+
+  schemas:
+    AuditEvent:
+      type: object
+      properties:
+        eventId:
+          type: string
+          description: Unique identifier for the event (UUID)
+        eventType:
+          type: string
+          description: Category of the event (e.g., PRODUCT_CREATED, PRODUCT_UPDATED)
+        entityType:
+          type: string
+          description: Type of the entity involved (e.g., Product)
+        entityId:
+          type: integer
+          format: int64
+          description: ID of the entity
+        operation:
+          type: string
+          description: HTTP Method or Operation Name (POST, PUT, DELETE)
+        status:
+          type: string
+          description: Outcome of the operation (SUCCESS, FAILURE)
+        userId:
+          type: string
+          description: ID of the user performing the action (if available)
+        requestPayload:
+          type: object
+          description: The JSON payload of the request
+        responsePayload:
+          type: object
+          description: The JSON payload of the response (if applicable)
+        errorMessage:
+          type: string
+          description: Error message if the operation failed
+        httpStatusCode:
+          type: integer
+          description: HTTP status code returned to the client
+        requestTimestamp:
+          type: string
+          format: date-time
+          description: UTC timestamp when the request was received
+        completionTimestamp:
+          type: string
+          format: date-time
+          description: UTC timestamp when the request completed
+        durationMs:
+          type: integer
+          format: int64
+          description: Duration of the request in milliseconds
+        sourceIp:
+          type: string
+          description: IP address of the client
+        podName:
+          type: string
+          description: Kubernetes pod generating the event
+        chaosActive:
+          type: boolean
+          description: Flag indicating if chaos engineering was active during this event
+      required:
+        - eventId
+        - eventType
+        - requestTimestamp
