@@ -18,7 +18,7 @@ COPY src src
 
 # Build Spring Boot Native binary
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw -Pnative -DskipTests native:compile
+    ./mvnw -Pnative -Dmaven.test.skip=true native:compile
 
 # Ensure binary is executable (since distroless has no chmod)
 RUN chmod +x target/springboot-graalvm-lambda

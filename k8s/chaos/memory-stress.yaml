@@ -1,0 +1,45 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: memory-stress-schedule
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 5m"
+  type: "StressChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  stressChaos:
+    mode: one
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-aot"
+    stressors:
+      memory:
+        workers: 1
+        size: "256MB"
+    duration: "30s"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: memory-stress-schedule-jit
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 5m"
+  type: "StressChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  stressChaos:
+    mode: one
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-jit"
+    stressors:
+      memory:
+        workers: 1
+        size: "256MB"
+    duration: "30s"

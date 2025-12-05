@@ -1,0 +1,45 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: cpu-stress-schedule
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 4m"
+  type: "StressChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  stressChaos:
+    mode: one
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-aot"
+    stressors:
+      cpu:
+        workers: 2
+        load: 80
+    duration: "45s"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: cpu-stress-schedule-jit
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 4m"
+  type: "StressChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  stressChaos:
+    mode: one
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-jit"
+    stressors:
+      cpu:
+        workers: 2
+        load: 80
+    duration: "45s"

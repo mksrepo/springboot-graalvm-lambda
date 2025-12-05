@@ -42,14 +42,15 @@ spec:
           failureThreshold: 5
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "chaos-monkey"
+          value: "production"
+
         resources:
           requests:
             memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
             cpu: "500m"
+          limits:
+            memory: "768Mi"
+            cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service

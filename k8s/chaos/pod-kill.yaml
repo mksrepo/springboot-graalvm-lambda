@@ -1,0 +1,41 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: pod-kill-schedule
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 30s"
+  type: "PodChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  startingDeadlineSeconds: 60
+  podChaos:
+    action: pod-kill
+    mode: one
+    duration: "30s"
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-aot"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: pod-kill-schedule-jit
+  namespace: springboot-graalvm
+spec:
+  schedule: "@every 30s"
+  type: "PodChaos"
+  historyLimit: 5
+  concurrencyPolicy: "Forbid"
+  startingDeadlineSeconds: 60
+  podChaos:
+    action: pod-kill
+    mode: one
+    duration: "30s"
+    selector:
+      namespaces:
+        - springboot-graalvm
+      labelSelectors:
+        "app": "springboot-graalvm-jit"

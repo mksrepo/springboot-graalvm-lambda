@@ -8,18 +8,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for ProductService.
+ * Unit tests for ProductService with R2DBC reactive support.
  */
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -45,53 +44,58 @@ class ProductServiceTest {
     @Test
     void createProduct_ShouldReturnSavedProduct() {
         // Arrange
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        when(productRepository.findByName(any(String.class))).thenReturn(Mono.empty());
+        when(productRepository.save(any(Product.class))).thenReturn(Mono.just(testProduct));
 
-        // Act
-        Product result = productService.createProduct(testProduct);
+        // Act & Assert
+        StepVerifier.create(productService.createProduct(testProduct))
+                .expectNextMatches(product -> product.getName().equals(testProduct.getName()))
+                .verifyComplete();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProduct.getName(), result.getName());
         verify(productRepository, times(1)).save(testProduct);
     }
 
     @Test
-    void getAllProducts_ShouldReturnListOfProducts() {
+    void getAllProducts_ShouldReturnFluxOfProducts() {
         // Arrange
-        List<Product> products = Arrays.asList(testProduct, new Product());
-        when(productRepository.findAll()).thenReturn(products);
+        Product product2 = new Product();
+        product2.setId(2L);
+        product2.setName("Product 2");
+        when(productRepository.findAll()).thenReturn(Flux.just(testProduct, product2));
 
-        // Act
-        List<Product> result = productService.getAllProducts();
+        // Act & Assert
+        StepVerifier.create(productService.getAllProducts())
+                .expectNext(testProduct)
+                .expectNext(product2)
+                .verifyComplete();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
         verify(productRepository, times(1)).findAll();
     }
 
     @Test
     void getProductById_WhenProductExists_ShouldReturnProduct() {
         // Arrange
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+        when(productRepository.findById(1L)).thenReturn(Mono.just(testProduct));
 
-        // Act
-        Product result = productService.getProductById(1L);
+        // Act & Assert
+        StepVerifier.create(productService.getProductById(1L))
+                .expectNextMatches(product -> product.getId().equals(testProduct.getId()))
+                .verifyComplete();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(testProduct.getId(), result.getId());
         verify(productRepository, times(1)).findById(1L);
     }
 
     @Test
-    void getProductById_WhenProductNotExists_ShouldThrowException() {
+    void getProductById_WhenProductNotExists_ShouldReturnError() {
         // Arrange
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productRepository.findById(999L)).thenReturn(Mono.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> productService.getProductById(999L));
+        StepVerifier.create(productService.getProductById(999L))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().contains("Product not found"))
+                .verify();
+
         verify(productRepository, times(1)).findById(999L);
     }
 
@@ -104,29 +108,35 @@ class ProductServiceTest {
         updatedDetails.setPrice(new BigDecimal("149.99"));
         updatedDetails.setQuantity(20);
 
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        Product updatedProduct = new Product();
+        updatedProduct.setId(1L);
+        updatedProduct.setName("Updated Product");
+        updatedProduct.setDescription("Updated Description");
+        updatedProduct.setPrice(new BigDecimal("149.99"));
+        updatedProduct.setQuantity(20);
 
-        // Act
-        Product result = productService.updateProduct(1L, updatedDetails);
+        when(productRepository.findById(1L)).thenReturn(Mono.just(testProduct));
+        when(productRepository.save(any(Product.class))).thenReturn(Mono.just(updatedProduct));
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("Updated Product", result.getName());
+        // Act & Assert
+        StepVerifier.create(productService.updateProduct(1L, updatedDetails))
+                .expectNextMatches(product -> product.getName().equals("Updated Product"))
+                .verifyComplete();
+
         verify(productRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).save(testProduct);
+        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
     void deleteProduct_WhenProductExists_ShouldDeleteProduct() {
         // Arrange
-        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
-        doNothing().when(productRepository).delete(testProduct);
+        when(productRepository.findById(1L)).thenReturn(Mono.just(testProduct));
+        when(productRepository.delete(testProduct)).thenReturn(Mono.empty());
 
-        // Act
-        productService.deleteProduct(1L);
+        // Act & Assert
+        StepVerifier.create(productService.deleteProduct(1L))
+                .verifyComplete();
 
-        // Assert
         verify(productRepository, times(1)).findById(1L);
         verify(productRepository, times(1)).delete(testProduct);
     }
@@ -134,15 +144,14 @@ class ProductServiceTest {
     @Test
     void searchProductsByName_ShouldReturnMatchingProducts() {
         // Arrange
-        List<Product> products = Arrays.asList(testProduct);
-        when(productRepository.findByNameContainingIgnoreCase("Test")).thenReturn(products);
+        when(productRepository.findByNameContainingIgnoreCase("Test"))
+                .thenReturn(Flux.just(testProduct));
 
-        // Act
-        List<Product> result = productService.searchProductsByName("Test");
+        // Act & Assert
+        StepVerifier.create(productService.searchProductsByName("Test"))
+                .expectNext(testProduct)
+                .verifyComplete();
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
         verify(productRepository, times(1)).findByNameContainingIgnoreCase("Test");
     }
 }
