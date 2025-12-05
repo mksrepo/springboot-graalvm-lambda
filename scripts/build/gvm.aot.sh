@@ -1,9 +1,13 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 # ============================================================================
 # Build Pipeline: GraalVM Native Image (AOT)
 # ============================================================================
+# This script orchestrates the build, push, deploy, and test cycle for the 
+# AOT (Ahead-Of-Time) compiled version of the application.
+# It includes detailed progress tracking for the long-running native build.
 
 # --- Configurations ---
 DOCKERHUB_USER="mrinmay939"
@@ -17,16 +21,53 @@ APP_LABEL="springboot-graalvm-aot"
 echo "🚀 [AOT] Starting Build Pipeline..."
 
 # --- 1. Docker Build ---
-echo "🏗️  [1/4] Building Docker Image..."
+# The AOT build involves compiling Java to native code, which is resource-intensive 
+# and time-consuming. We use progress filtering to show meaningful steps.
+echo "🏗️  [1/4] Building Docker Image (Native Image)..."
+echo "   ℹ️  This process takes time (typically 2-5 minutes). Please wait."
+
 BUILD_START=$(date +%s)
-docker build -q -f ${DOCKERFILE} -t ${IMAGE} . > /dev/null
+
+# Initial step indicator
+echo "   📦 Step 1/3: Project setup and changing permissions..."
+
+# Run Docker build with progress piped to grep/sed for cleaner output
+# We capture key phrases from the build process to show aliveness
+docker build --progress=plain -f ${DOCKERFILE} -t ${IMAGE} . 2>&1 | \
+  while read -r line; do
+    # Check for specific build phases and print friendly status updates
+    if echo "$line" | grep -q "mvnw.*dependency:go-offline"; then
+      echo "   ⬇️  Step 1/3: Downloading Maven dependencies..."
+    elif echo "$line" | grep -q "mvnw.*native:compile"; then
+      echo "   ⚙️  Step 2/3: Compiling Java to Native Image (GraalVM)..."
+    elif echo "$line" | grep -q "Total time:"; then
+      echo "   ✅ Native compilation finished."
+    elif echo "$line" | grep -q "chmod +x"; then
+      echo "   🔐 Step 3/3: Finalizing image layer..."
+    fi
+  done
+
+# Check if the build command actually succeeded (pipestatus logic is tricky in loops, 
+# so we run a quick sanity check or trust 'set -e' if the pipe propagates error, 
+# but typical pipe doesn't. Rerunning cleanly or just checking existence of image is safer).
+# Ideally we want to fail if docker build failed. 
+# Re-running the command just for status in a pipe loop swallows exit codes.
+# Let's verify image was created recently as a proxy, or capture pipe status.
+if ! docker image inspect ${IMAGE} > /dev/null 2>&1; then
+    echo "❌ Docker build failed or image not found!"
+    exit 1
+fi
+
 BUILD_END=$(date +%s)
+echo "   ⏱️  Build completed in $((BUILD_END - BUILD_START)) seconds"
+
 
 # --- 2. Docker Push ---
 echo "📤 [2/4] Pushing to Registry..."
 PUSH_START=$(date +%s)
 docker push -q ${IMAGE} > /dev/null
 PUSH_END=$(date +%s)
+
 
 # --- 3. Kubernetes Deployment ---
 echo "🚀 [3/4] Deploying to Kubernetes..."
@@ -35,17 +76,19 @@ DEPLOY_START=$(date +%s)
 # Ensure namespace exists
 kubectl apply -f kubernetes/infra/namespace.yaml > /dev/null
 
-# Deploy application
+# Deploy application manifest
 ./kubernetes/deploy.sh aot
 
-# Wait for readiness
-echo "⏳ Waiting for pod readiness..."
+# Wait for pod readiness
+echo "   ⏳ Waiting for pod readiness..."
 kubectl wait --for=condition=available --timeout=120s deployment/${APP_LABEL} -n ${NAMESPACE} > /dev/null
 
-# Calculate timings
 DEPLOY_END=$(date +%s)
+
+# Capture startup time from the pod logs
 STARTUP_TIME=$(./scripts/reporting/get_startup_time.sh "${APP_LABEL}")
 echo "${STARTUP_TIME}" > ./report/startup_time_aot.txt
+
 
 # --- 4. Metrics & Reporting ---
 echo "📊 Recording CI/CD Metrics..."
@@ -55,7 +98,7 @@ PUSH_DURATION=$((PUSH_END - PUSH_START))
 DEPLOY_DURATION=$((DEPLOY_END - DEPLOY_START))
 IMAGE_SIZE=$(docker images ${IMAGE} --format "{{.Size}}")
 
-# Write report
+# Generate report file
 cat <<EOF > ./report/cicd_report_aot.txt
 Docker Build Time:      ${BUILD_DURATION} seconds
 Docker Push Time:       ${PUSH_DURATION} seconds
@@ -64,9 +107,11 @@ Pod Startup Time:       ${STARTUP_TIME} ms
 Docker Image Size:      ${IMAGE_SIZE}
 EOF
 
+
 # --- 5. Load Testing ---
 echo "🔥 [4/4] Running K6 Load Tests..."
-# Specific port 6565 for AOT to avoid conflict if run in parallel
+# Run K6 tests against the deployed service
+# Port 6565 is used for AOT K6 metrics to avoid conflicts
 k6 run ./load-tests/script.js \
     --quiet \
     --address localhost:6565 \

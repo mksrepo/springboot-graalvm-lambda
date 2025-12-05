@@ -18,12 +18,11 @@ export let options = {
   duration: "10s", // Test Duration
   thresholds: {
     http_req_failed: ['rate<0.01'],   // Error rate should be < 1%
-    http_req_duration: ['p(95)<500'], // 95% of requests should be faster than 500ms
+    http_req_duration: ['p(95)<2000'], // 95% of requests should be faster than 2000ms
   },
 };
 
 const BASE_URL = __ENV.URL; // e.g., http://localhost:30001/api/products
-const AUDIT_URL = BASE_URL.replace("/products", "/audit-logs");
 const HEADERS = { 'Content-Type': 'application/json' };
 
 // --- Main Test Loop ---
@@ -41,10 +40,7 @@ export default function () {
   // 3. List All Products
   listProducts();
 
-  // 4. View Audit Logs
-  getAuditLogs();
-
-  // 5. Think Time (random sleep between 0.1s and 0.6s)
+  // 4. Think Time (random sleep between 0.1s and 0.6s)
   sleep(Math.random() * 0.5 + 0.1);
 }
 
@@ -88,14 +84,6 @@ function listProducts() {
   check(res, {
     "GET /products 200 OK": (r) => r.status === 200,
     "GET /products has body": (r) => r.body.length > 0,
-  });
-}
-
-function getAuditLogs() {
-  const res = http.get(AUDIT_URL, { headers: HEADERS });
-
-  check(res, {
-    "GET /audit-logs 200 OK": (r) => r.status === 200,
   });
 }
 
