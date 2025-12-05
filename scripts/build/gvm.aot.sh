@@ -113,7 +113,6 @@ echo "🔥 [4/4] Running K6 Load Tests..."
 # Run K6 tests against the deployed service
 # Port 6565 is used for AOT K6 metrics to avoid conflicts
 k6 run ./load-tests/script.js \
-    --quiet \
     --address localhost:6565 \
     --env URL=http://localhost:30001/api/products \
     --env TYPE=aot

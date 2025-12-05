@@ -93,9 +93,8 @@ EOF
 # --- 5. Load Testing ---
 echo "🔥 [4/4] Running K6 Load Tests..."
 # Run K6 tests against the deployed service
-# Port 6566 is used for JIT K6 metrics
+# Specific port 6566 for JIT K6 metrics
 k6 run ./load-tests/script.js \
-    --quiet \
     --address localhost:6566 \
     --env URL=http://localhost:30002/api/products \
     --env TYPE=jit
