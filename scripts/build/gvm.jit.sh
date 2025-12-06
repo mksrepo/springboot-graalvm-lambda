@@ -25,15 +25,8 @@ echo "   ℹ️  Building standard Java image..."
 
 BUILD_START=$(date +%s)
 
-# Run Docker build with simplified progress steps
-docker build --progress=plain -f ${DOCKERFILE} -t ${IMAGE} . 2>&1 | \
-  while read -r line; do
-    if echo "$line" | grep -q "mvn.*dependency:go-offline"; then
-      echo "   ⬇️  Step 1/2: Downloading dependencies..."
-    elif echo "$line" | grep -q "mvn.*package"; then
-      echo "   ⚙️  Step 2/2: Packaging JAR application..."
-    fi
-  done
+# Run Docker build with comprehensive monitoring
+./scripts/build/monitor_docker_build.sh "${DOCKERFILE}" "${IMAGE}"
 
 if ! docker image inspect ${IMAGE} > /dev/null 2>&1; then
     echo "❌ Docker build failed or image not found!"

@@ -31,21 +31,8 @@ BUILD_START=$(date +%s)
 # Initial step indicator
 echo "   📦 Step 1/3: Project setup and changing permissions..."
 
-# Run Docker build with progress piped to grep/sed for cleaner output
-# We capture key phrases from the build process to show aliveness
-docker build --progress=plain -f ${DOCKERFILE} -t ${IMAGE} . 2>&1 | \
-  while read -r line; do
-    # Check for specific build phases and print friendly status updates
-    if echo "$line" | grep -q "mvnw.*dependency:go-offline"; then
-      echo "   ⬇️  Step 1/3: Downloading Maven dependencies..."
-    elif echo "$line" | grep -q "mvnw.*native:compile"; then
-      echo "   ⚙️  Step 2/3: Compiling Java to Native Image (GraalVM)..."
-    elif echo "$line" | grep -q "Total time:"; then
-      echo "   ✅ Native compilation finished."
-    elif echo "$line" | grep -q "chmod +x"; then
-      echo "   🔐 Step 3/3: Finalizing image layer..."
-    fi
-  done
+# Run Docker build with comprehensive monitoring
+./scripts/build/monitor_docker_build.sh "${DOCKERFILE}" "${IMAGE}"
 
 # Check if the build command actually succeeded (pipestatus logic is tricky in loops, 
 # so we run a quick sanity check or trust 'set -e' if the pipe propagates error, 
