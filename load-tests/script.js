@@ -15,11 +15,11 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 // --- Configuration ---
 // Set dynamic threshold based on environment (AOT vs JIT)
 // JIT needs more time for warmup, so we set a higher threshold (15s) vs AOT (2s)
-const THRESHOLD = __ENV.TYPE === 'jit' ? '15000' : '2000';
+const THRESHOLD = __ENV.TYPE === 'jit' ? '15000' : '6000';
 
 export let options = {
-  vus: 10,       // Virtual Users
-  duration: "5s", // Test Duration
+  vus: 50,       // Virtual Users
+  duration: "30s", // Test Duration
   thresholds: {
     http_req_failed: ['rate<0.01'],   // Error rate should be < 1%
     http_req_duration: [`p(95)<${THRESHOLD}`], // Dynamic threshold
