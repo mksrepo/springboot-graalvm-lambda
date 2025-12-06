@@ -4,17 +4,17 @@ metadata:
   name: springboot-graalvm-jit
   namespace: springboot-graalvm
   labels:
-    app: springboot-graalvm-jit
+    app: jit
     version: v2.0
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: springboot-graalvm-jit
+      app: jit
   template:
     metadata:
       labels:
-        app: springboot-graalvm-jit
+        app: jit
         version: v2.0
     spec:
       containers:
@@ -65,11 +65,11 @@ metadata:
   name: springboot-graalvm-jit
   namespace: springboot-graalvm
   labels:
-    app: springboot-graalvm-jit
+    app: jit
 spec:
   type: NodePort
   selector:
-    app: springboot-graalvm-jit
+    app: jit
   ports:
   - port: 8080
     targetPort: 8080

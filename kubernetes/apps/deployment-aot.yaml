@@ -4,17 +4,17 @@ metadata:
   name: springboot-graalvm-aot
   namespace: springboot-graalvm
   labels:
-    app: springboot-graalvm-aot
+    app: aot
     version: v2.0
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: springboot-graalvm-aot
+      app: aot
   template:
     metadata:
       labels:
-        app: springboot-graalvm-aot
+        app: aot
         version: v2.0
     spec:
       containers:
@@ -65,11 +65,11 @@ metadata:
   name: springboot-graalvm-aot
   namespace: springboot-graalvm
   labels:
-    app: springboot-graalvm-aot
+    app: aot
 spec:
   type: NodePort
   selector:
-    app: springboot-graalvm-aot
+    app: aot
   ports:
   - port: 8080
     targetPort: 8080

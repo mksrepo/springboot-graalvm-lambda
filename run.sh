@@ -127,6 +127,13 @@ fi
 
 echo "✅ Build pipeline completed successfully."
 
+# Capture startup times (wait + measurement handled by the script)
+STARTUP_AOT=$(./scripts/reporting/get_startup_time.sh aot)
+echo "$STARTUP_AOT" > report/startup_time_aot.txt
+
+STARTUP_JIT=$(./scripts/reporting/get_startup_time.sh jit)
+echo "$STARTUP_JIT" > report/startup_time_jit.txt
+
 # --- 9. Activate Chaos Experiments (Conditional) ---
 if [ "$CHAOS_MODE" = true ]; then
     sleep 5
