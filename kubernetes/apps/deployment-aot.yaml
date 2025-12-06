@@ -24,6 +24,9 @@ spec:
         ports:
         - containerPort: 8080
           name: http
+        
+        # --- Health Checks ---
+        # AOT starts instantly, so we can check health very quickly.
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
@@ -36,21 +39,25 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 5
+          initialDelaySeconds: 5 # AOT is ready in milliseconds
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 5
+
+        # --- Environment Configuration ---
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
 
+        # --- Resource Limits ---
+        # AOT is memory-efficient but needs some CPU for initial request handling.
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "768Mi"
+            memory: "1024Mi"
             cpu: "1000m"
+          limits:
+            memory: "2048Mi"
+            cpu: "2000m"
 ---
 apiVersion: v1
 kind: Service
@@ -66,6 +73,6 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-    nodePort: 30001
+    nodePort: 30001 # Static NodePort for external access (K6 tests use this)
     protocol: TCP
     name: http

@@ -24,11 +24,14 @@ spec:
         ports:
         - containerPort: 8080
           name: http
+
+        # --- Health Checks ---
+        # JVM requires warmup time, so we delay health checks significantly.
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: 8080
-          initialDelaySeconds: 40
+          initialDelaySeconds: 40 # Give JVM time to start
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 5
@@ -36,21 +39,25 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 30
+          initialDelaySeconds: 30 # Wait for Spring context to fully load
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 5
+
+        # --- Environment Configuration ---
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
 
+        # --- Resource Limits ---
+        # JIT needs more resources than native, but we allocate a higher budget now.
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "768Mi"
+            memory: "1024Mi"
             cpu: "1000m"
+          limits:
+            memory: "2048Mi"
+            cpu: "2000m"
 ---
 apiVersion: v1
 kind: Service
@@ -66,6 +73,6 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-    nodePort: 30002
+    nodePort: 30002 # Static NodePort for external access (K6 tests use this)
     protocol: TCP
     name: http
