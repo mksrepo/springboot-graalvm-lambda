@@ -1,49 +1,37 @@
-# =========================================================
-# 1. Build Spring Boot Native Image using latest GraalVM 25
-# =========================================================
-FROM ghcr.io/graalvm/native-image-community:25 AS build
+# Syntax: docker/dockerfile:1
 
+# ------------------------------------------------------------------------------
+# Stage 1: Build Native Image
+# ------------------------------------------------------------------------------
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 WORKDIR /workspace
 
-# Copy minimal files first for better caching
+# Dependency caching
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -q dependency:go-offline
 
-# Warm up Maven dependencies
-RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw -q dependency:go-offline
-
-# Copy application source
+# Compile application
 COPY src src
-
-# Build Spring Boot Native binary
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -Pnative -Dmaven.test.skip=true native:compile
 
-# Ensure binary is executable (since distroless has no chmod)
-RUN chmod +x target/springboot-graalvm-lambda
+# ------------------------------------------------------------------------------
+# Stage 2: Runtime Image
+# ------------------------------------------------------------------------------
+FROM debian:bookworm-slim
+WORKDIR /app
 
-# =========================================================
-# 2. Minimal runtime for running the native binary
-# =========================================================
-FROM debian:bookworm-slim AS final
-
-# Install required runtime libraries
+# Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     zlib1g \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# Copy native binary from build
+# Install application
 COPY --from=build /workspace/target/springboot-graalvm-lambda /app/app
-
-# Make binary executable
 RUN chmod +x /app/app
 
-# Expose port (if web app)
 EXPOSE 8080
-
 ENTRYPOINT ["/app/app"]

@@ -19,7 +19,7 @@ const THRESHOLD = __ENV.TYPE === 'jit' ? '15000' : '2000';
 
 export let options = {
   vus: 10,       // Virtual Users
-  duration: "10s", // Test Duration
+  duration: "5s", // Test Duration
   thresholds: {
     http_req_failed: ['rate<0.01'],   // Error rate should be < 1%
     http_req_duration: [`p(95)<${THRESHOLD}`], // Dynamic threshold

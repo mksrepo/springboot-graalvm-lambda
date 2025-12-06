@@ -1,33 +1,34 @@
-# ======== Stage 1: Build the JAR ========
-FROM maven:3.9.6-amazoncorretto-17 AS build
+# Syntax: docker/dockerfile:1
 
+# ------------------------------------------------------------------------------
+# Stage 1: Build Application
+# ------------------------------------------------------------------------------
+FROM maven:3.9.6-amazoncorretto-17 AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies first (cache layer)
+# Dependency caching
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source and build
+# Build and Layer extraction
 COPY src ./src
-RUN mvn clean package -Dmaven.test.skip=true
+RUN mvn clean package -Dmaven.test.skip=true && \
+    java -Djarmode=layertools -jar target/*.jar extract
 
-# Extract layers
-RUN java -Djarmode=layertools -jar target/*.jar extract
-
-# ======== Stage 2: Run the JAR ========
+# ------------------------------------------------------------------------------
+# Stage 2: Runtime Image
+# ------------------------------------------------------------------------------
 FROM amazoncorretto:17-alpine
-
 WORKDIR /app
 
-# Install curl for healthchecks
+# Runtime dependencies
 RUN apk add --no-cache curl
 
-# Copy layers
+# Install Layered Application
 COPY --from=build /app/dependencies/ ./
 COPY --from=build /app/spring-boot-loader/ ./
 COPY --from=build /app/snapshot-dependencies/ ./
 COPY --from=build /app/application/ ./
 
 EXPOSE 8080
-
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

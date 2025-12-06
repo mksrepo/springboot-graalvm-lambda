@@ -129,10 +129,6 @@ echo "✅ Build pipeline completed successfully."
 
 # --- 9. Activate Chaos Experiments (Conditional) ---
 if [ "$CHAOS_MODE" = true ]; then
-    echo "🧹 Resetting chaos state..."
-    chmod +x ./kubernetes/chaos/stop-chaos.sh
-    ./kubernetes/chaos/stop-chaos.sh
-    
     sleep 5
     apply_chaos_experiments
 fi

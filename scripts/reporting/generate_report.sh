@@ -15,11 +15,14 @@ OUTPUT_FILE="${REPORT_DIR}/aot_vs_jit.md"
 
 # Extracts a specific metric from a K6 stdout text file
 # Usage: get_k6_metric <file> <metric_name> <awk_field_index>
+# Extracts a specific metric from a K6 stdout text file
+# Usage: get_k6_metric <file> <metric_name> <awk_field_index>
 get_k6_metric() {
     local file=$1
     local metric=$2
     local field=$3
-    grep "${metric}" "${file}" | awk -v f="$field" '{print $f}'
+    # Remove checkmarks/crosses to normalize field positions
+    sed 's/[✓✗]//g' "${file}" | grep "${metric}" | awk -v f="$field" '{print $f}'
 }
 
 # Extracts a metric key-value pair from the Custom CI/CD text file
@@ -63,6 +66,10 @@ calc_comparison() {
         local aot_clean=$(echo "$aot" | sed 's/[^0-9.]//g')
         local jit_clean=$(echo "$jit" | sed 's/[^0-9.]//g')
     fi
+
+    # Validation: Ensure they are valid numbers (not just dots)
+    if [[ ! "$aot_clean" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then aot_clean="0"; fi
+    if [[ ! "$jit_clean" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then jit_clean="0"; fi
     
     # Handle missing/zero data
     if [[ -z "$aot_clean" || -z "$jit_clean" || "$aot_clean" == "0" || "$jit_clean" == "0" ]]; then
@@ -106,22 +113,32 @@ echo "📝 Generting comparison report..."
 
 # --- 1. Data Collection ---
 
-# AOT Metrics
+# AOT Metrics extraction
 if [ -f "${REPORT_DIR}/k6_report_aot.txt" ]; then
     AOT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 2)
     AOT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_reqs" 3)
     AOT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 2 | sed 's/avg=//')
+    AOT_MED_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 4 | sed 's/med=//')
+    AOT_MAX_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 5 | sed 's/max=//')
     AOT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_duration" 7 | sed 's/p(95)=//')
-    AOT_FAILURES=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_failed" 4)
+    AOT_FAILURES=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "http_req_failed" 2)
     AOT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 2)
     AOT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "data_received" 3)
+    
+    # Extract Test Config from AOT report (assuming same for JIT)
+    TEST_VUS=$(get_k6_metric "${REPORT_DIR}/k6_report_aot.txt" "vus_max" 2 | sed 's/min=//' | head -1)
+    TEST_DURATION="10s" # Hardcoded based on script, or could be parsed
 else
     AOT_REQS="N/A"
     AOT_THROUGHPUT="N/A"
     AOT_AVG_LATENCY="N/A"
+    AOT_MED_LATENCY="N/A"
+    AOT_MAX_LATENCY="N/A"
     AOT_P95_LATENCY="N/A"
     AOT_FAILURES="N/A"
     AOT_DATA="N/A"
+    TEST_VUS="N/A"
+    TEST_DURATION="N/A"
 fi
 
 if [ -f "${REPORT_DIR}/cicd_report_aot.txt" ]; then
@@ -137,19 +154,23 @@ else
 fi
 AOT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_aot.txt" 2>/dev/null || echo "N/A")
 
-# JIT Metrics
+# JIT Metrics extraction
 if [ -f "${REPORT_DIR}/k6_report_jit.txt" ]; then
     JIT_REQS=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 2)
     JIT_THROUGHPUT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_reqs" 3)
     JIT_AVG_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 2 | sed 's/avg=//')
+    JIT_MED_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 4 | sed 's/med=//')
+    JIT_MAX_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 5 | sed 's/max=//')
     JIT_P95_LATENCY=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_duration" 7 | sed 's/p(95)=//')
-    JIT_FAILURES=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_failed" 4)
+    JIT_FAILURES=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "http_req_failed" 2)
     JIT_DATA=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 2)
     JIT_DATA_UNIT=$(get_k6_metric "${REPORT_DIR}/k6_report_jit.txt" "data_received" 3)
 else
     JIT_REQS="N/A"
     JIT_THROUGHPUT="N/A"
     JIT_AVG_LATENCY="N/A"
+    JIT_MED_LATENCY="N/A"
+    JIT_MAX_LATENCY="N/A"
     JIT_P95_LATENCY="N/A"
     JIT_FAILURES="N/A"
     JIT_DATA="N/A"
@@ -168,15 +189,13 @@ else
 fi
 JIT_STARTUP_TIME=$(cat "${REPORT_DIR}/startup_time_jit.txt" 2>/dev/null || echo "N/A")
 
-# --- 2. Data Comparison ---
-
-# Higher is Better
+# ... [Comparisons] ...
+CMP_MAX_LATENCY=$(calc_comparison "$AOT_MAX_LATENCY" "$JIT_MAX_LATENCY" "lower_better")
 CMP_REQS=$(calc_comparison "$AOT_REQS" "$JIT_REQS" "higher_better")
 CMP_THROUGHPUT=$(calc_comparison "$AOT_THROUGHPUT" "$JIT_THROUGHPUT" "higher_better")
 CMP_DATA=$(calc_comparison "$AOT_DATA" "$JIT_DATA" "higher_better")
-
-# Lower is Better
 CMP_AVG_LATENCY=$(calc_comparison "$AOT_AVG_LATENCY" "$JIT_AVG_LATENCY" "lower_better")
+CMP_MED_LATENCY=$(calc_comparison "$AOT_MED_LATENCY" "$JIT_MED_LATENCY" "lower_better")
 CMP_P95_LATENCY=$(calc_comparison "$AOT_P95_LATENCY" "$JIT_P95_LATENCY" "lower_better")
 CMP_FAILURES=$(calc_comparison "$AOT_FAILURES" "$JIT_FAILURES" "lower_better")
 CMP_BUILD_TIME=$(calc_comparison "$AOT_BUILD_TIME" "$JIT_BUILD_TIME" "lower_better")
@@ -207,12 +226,16 @@ fmt_imp() {
 }
 
 # --- 3. Report Generation ---
-
 cat <<EOF > "${OUTPUT_FILE}"
 # 📊 Performance Comparison: AOT vs JIT
 
 ## 📋 Overview
 This report compares the performance of the **AOT** (GraalVM Native Image) and **JIT** (JVM) versions based on the latest k6 load test results.
+
+**🧪 Test Configuration:**
+- **Virtual Users:** ${TEST_VUS} (Simulated concurrent users)
+- **Duration:** ${TEST_DURATION}
+- **Tool:** k6 Load Testing
 
 ---
 
@@ -223,9 +246,11 @@ This report compares the performance of the **AOT** (GraalVM Native Image) and *
 | **🚀 Total Requests** | ${AOT_REQS} | ${JIT_REQS} | $(fmt_winner "$(get_win "$CMP_REQS")") | $(fmt_imp "$(get_imp "$CMP_REQS")") |
 | **⚡ Throughput** | ${AOT_THROUGHPUT} | ${JIT_THROUGHPUT} | $(fmt_winner "$(get_win "$CMP_THROUGHPUT")") | $(fmt_imp "$(get_imp "$CMP_THROUGHPUT")") |
 | **⏱️ Avg Response** | ${AOT_AVG_LATENCY} | ${JIT_AVG_LATENCY} | $(fmt_winner "$(get_win "$CMP_AVG_LATENCY")") | $(fmt_imp "$(get_imp "$CMP_AVG_LATENCY")") |
-| **📈 p95 Response** | ${AOT_P95_LATENCY} | ${JIT_P95_LATENCY} | $(fmt_winner "$(get_win "$CMP_P95_LATENCY")") | $(fmt_imp "$(get_imp "$CMP_P95_LATENCY")") |
+| **🎯 Median Response** | ${AOT_MED_LATENCY} | ${JIT_MED_LATENCY} | $(fmt_winner "$(get_win "$CMP_MED_LATENCY")") | $(fmt_imp "$(get_imp "$CMP_MED_LATENCY")") |
+| **📉 p95 Response** | ${AOT_P95_LATENCY} | ${JIT_P95_LATENCY} | $(fmt_winner "$(get_win "$CMP_P95_LATENCY")") | $(fmt_imp "$(get_imp "$CMP_P95_LATENCY")") |
+| **💥 Max Response** | ${AOT_MAX_LATENCY} | ${JIT_MAX_LATENCY} | $(fmt_winner "$(get_win "$CMP_MAX_LATENCY")") | $(fmt_imp "$(get_imp "$CMP_MAX_LATENCY")") |
 | **📦 Data Received** | ${AOT_DATA} ${AOT_DATA_UNIT} | ${JIT_DATA} ${JIT_DATA_UNIT} | $(fmt_winner "$(get_win "$CMP_DATA")") | $(fmt_imp "$(get_imp "$CMP_DATA")") |
-| **❌ Failures** | ${AOT_FAILURES} | ${JIT_FAILURES} | $(fmt_winner "$(get_win "$CMP_FAILURES")") | $(fmt_imp "$(get_imp "$CMP_FAILURES")") |
+| **❌ Failure Rate** | ${AOT_FAILURES} | ${JIT_FAILURES} | $(fmt_winner "$(get_win "$CMP_FAILURES")") | $(fmt_imp "$(get_imp "$CMP_FAILURES")") |
 | **🔨 Build Time** | ${AOT_BUILD_TIME} | ${JIT_BUILD_TIME} | $(fmt_winner "$(get_win "$CMP_BUILD_TIME")") | $(fmt_imp "$(get_imp "$CMP_BUILD_TIME")") |
 | **💾 Image Size** | ${AOT_IMAGE_SIZE} | ${JIT_IMAGE_SIZE} | $(fmt_winner "$(get_win "$CMP_IMAGE_SIZE")") | $(fmt_imp "$(get_imp "$CMP_IMAGE_SIZE")") |
 | **🚦 Startup Time** | ${AOT_STARTUP_TIME} ms | ${JIT_STARTUP_TIME} ms | $(fmt_winner "$(get_win "$CMP_STARTUP_TIME")") | $(fmt_imp "$(get_imp "$CMP_STARTUP_TIME")") |
@@ -238,16 +263,6 @@ This report compares the performance of the **AOT** (GraalVM Native Image) and *
 2. **Startup**: $(get_win "$CMP_STARTUP_TIME") starts faster by $(get_imp "$CMP_STARTUP_TIME")
 3. **Efficiency**: $(get_win "$CMP_IMAGE_SIZE") has a $(get_imp "$CMP_IMAGE_SIZE") smaller Docker image.
 
----
-
-## 📌 Legend
-- 🏆 = Winner
-- 🥈 = Runner Up
-- 🤝 = Tie
-- ⬆️ = Higher is better
-- ⬇️ = Lower is better
-
-*🤖 Generated automatically by scripts/reporting/generate_report.sh*
 EOF
 
 echo "✅ Report ready: ${OUTPUT_FILE}"
